@@ -14,7 +14,7 @@
 
 # 將exe加入windows defender例外
 ![Alt text](https://github.com/sobadrush/PeiPei-ECourse/blob/main/imgs/windows%20defender%20%E4%BE%8B%E5%A4%96%E8%A8%AD%E5%AE%9A/Image%201.png)
-![Alt text](./imgs/windows defender 例外設定/Image 2.png)
-![Alt text](./imgs/windows defender 例外設定/Image 3.png)
-![Alt text](./imgs/windows defender 例外設定/Image 4.png)
+![Alt text](https://github.com/sobadrush/PeiPei-ECourse/blob/main/imgs/windows%20defender%20%E4%BE%8B%E5%A4%96%E8%A8%AD%E5%AE%9A/Image%202.png)
+![Alt text](https://github.com/sobadrush/PeiPei-ECourse/blob/main/imgs/windows%20defender%20%E4%BE%8B%E5%A4%96%E8%A8%AD%E5%AE%9A/Image%203.png)
+![Alt text](https://github.com/sobadrush/PeiPei-ECourse/blob/main/imgs/windows%20defender%20%E4%BE%8B%E5%A4%96%E8%A8%AD%E5%AE%9A/Image%204.png)
 
