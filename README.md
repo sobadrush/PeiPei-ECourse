@@ -4,6 +4,13 @@
     3. 輸入圖形驗證碼
     4. 程式會開啟瀏覽器並跳轉到選課畫面，將實數未滿1hr的課程掛滿1hr
 
+# 開發相關
+    1. 建立虛擬環境: virtualenv env01
+    2. 啟動虛擬環境: .\env01\Scripts\activate
+    3. 安裝所需的lib: pip install -r requirement.txt
+    4. 安裝PyInstaller: pip install PyInstaller
+    5. Build exe: pyinstaller.exe -F .\autoCourse.py
+
 # 坑
     1. E-Course平台有做RWD，若 selenium 開啟的瀏覽器寬度太小 accmulateTime = tdArr[5].text 會選不到
 
