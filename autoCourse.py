@@ -56,7 +56,7 @@ if __name__ == '__main__':
     browser = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
     browser.get("https://ups.moe.edu.tw/mooc/index.php")
 
-    loginBtn = browser.find_element_by_class_name('btLogin')
+    loginBtn = browser.find_element(By.CLASS_NAME, 'btLogin')
     loginBtn.click()
 
     ### 
@@ -69,10 +69,11 @@ if __name__ == '__main__':
     browser.execute_script(f'''document.querySelector("input[placeholder='請輸入帳號']").value="{acctUsername}"''')
     browser.execute_script(f'''document.querySelector("input[placeholder='請輸入密碼']").value="{acctPassword}"''')
     # 手動輸入圖形驗證碼
-    time.sleep(15)
+    time.sleep(12)
 
     # 我的課程
     browser.execute_script('''document.querySelector("a[href='/mooc/profile.php']").click()''')
+    time.sleep(3)
 
     # 選課清單
     myCourseUrl="https://ups.moe.edu.tw/mooc/user/mycourse.php"
@@ -82,8 +83,11 @@ if __name__ == '__main__':
 
     courseList = [] # 課程List
     for curseTr in curseTrList:
-        courseName = curseTr.find_elements_by_tag_name("td")[2].text
-        accmulateTime = curseTr.find_elements_by_tag_name("td")[5].text
+        tdArr = curseTr.find_elements(By.TAG_NAME, "td")
+        courseName = tdArr[2].text
+        accmulateTime = tdArr[5].text
+        print(f"tdArr : {tdArr}")
+        print(f"courseName : {courseName}")
         print(f"accmulateTime : {accmulateTime}")
         accmulateHours = int(accmulateTime.split(":")[0])
         if accmulateHours < 1: # 累計時數1小時以下的才去掛課
