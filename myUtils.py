@@ -26,7 +26,7 @@ def attendToCourse(_browser, courseInfo, refreshMins=5, targetMins=60):
         print(f"{courseInfo} -- Count seconds: {secs} s")
 
         if secs % (60 * refreshMins) == 0: # 5mis, refresh not working
-            gotoCourse(courseId)
+            gotoCourse(_browser, courseId)
 
         if secs == 60 * targetMins: # 1hr, break
             break
