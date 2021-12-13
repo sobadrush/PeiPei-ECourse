@@ -84,6 +84,7 @@ if __name__ == '__main__':
     for curseTr in curseTrList:
         courseName = curseTr.find_elements_by_tag_name("td")[2].text
         accmulateTime = curseTr.find_elements_by_tag_name("td")[5].text
+        print(f"accmulateTime : {accmulateTime}")
         accmulateHours = int(accmulateTime.split(":")[0])
         if accmulateHours < 1: # 累計時數1小時以下的才去掛課
             goToCourseStr = curseTr.get_attribute("onclick")
