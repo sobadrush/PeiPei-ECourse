@@ -13,7 +13,7 @@
 |pip freeze ./requirements.txt <br> pip install -r ./requirements.txt|Python PIP 使用 requirements.txt 管理套件相依性|https://blog.longwin.com.tw/2019/03/python-pip-requirements-txt-management-package-2019/|
 
 # 將exe加入windows defender例外
-![Alt text](./imgs/windows defender 例外設定/Image 1.png)
+![Alt text](.main/imgs/windows defender 例外設定/Image 1.png)
 ![Alt text](./imgs/windows defender 例外設定/Image 2.png)
 ![Alt text](./imgs/windows defender 例外設定/Image 3.png)
 ![Alt text](./imgs/windows defender 例外設定/Image 4.png)
