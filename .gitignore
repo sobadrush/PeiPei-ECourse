@@ -1,5 +1,5 @@
 build/**
-*.spec
+*.specgit 
 .DS_Store
 .huskyrc.json
 out
