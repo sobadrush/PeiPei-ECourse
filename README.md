@@ -3,6 +3,9 @@
     2. 執行 autoCourse.exe 並鍵入帳號密碼
     3. 輸入圖形驗證碼
     4. 程式會開啟瀏覽器並跳轉到選課畫面，將實數未滿1hr的課程掛滿1hr
+    5. 手動停止程式: CTRL + C
+    6. 閱讀時數是以『分鐘』累計，不會馬上更新
+    7. 注意: 記得把電腦設定成不自動休眠&關機
 
 # 開發相關
     1. 建立虛擬環境: virtualenv env01
@@ -28,3 +31,8 @@
 ![Alt text](https://github.com/sobadrush/PeiPei-ECourse/blob/main/imgs/windows%20defender%20%E4%BE%8B%E5%A4%96%E8%A8%AD%E5%AE%9A/Image%203.png)
 ![Alt text](https://github.com/sobadrush/PeiPei-ECourse/blob/main/imgs/windows%20defender%20%E4%BE%8B%E5%A4%96%E8%A8%AD%E5%AE%9A/Image%204.png)
 
+# 關閉電腦休眠
+![Alt text](TBD)
+![Alt text](TBD)
+![Alt text](TBD)
+![Alt text](TBD)
