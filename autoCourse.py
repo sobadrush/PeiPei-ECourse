@@ -13,7 +13,8 @@ from selenium.webdriver.common.by import By
 # from selenium.webdriver.support import expected_conditions as EC
 # from selenium.common.exceptions import TimeoutException
 
-from myUtils import attendToCourse
+from myUtils import *
+# from myUtils import attendToCourse
 
 if __name__ == '__main__':
 
@@ -39,8 +40,8 @@ if __name__ == '__main__':
     ### 輸入帳密
     browser.execute_script(f'''document.querySelector("input[placeholder='請輸入帳號']").value="{acctUsername}"''')
     browser.execute_script(f'''document.querySelector("input[placeholder='請輸入密碼']").value="{base64.b64decode(acctPassword).decode("UTF-8")}"''')
-    # 手動輸入圖形驗證碼
-    time.sleep(12)
+    
+    time.sleep(12) # 停12秒用來手動輸入圖形驗證碼
 
     # 我的課程
     browser.execute_script('''document.querySelector("a[href='/mooc/profile.php']").click()''')
@@ -62,18 +63,20 @@ if __name__ == '__main__':
         accmulateTime = tdArr[5].text
         print(f"courseName : {courseName}")
         print(f"accmulateTime : {accmulateTime}")
-        accmulateHours = int(accmulateTime.split(":")[0])
-        if accmulateHours < 1: # 累計時數1小時以下的才去掛課
+        accmulateSecs = convertToSecs(accmulateTime) # 轉換成 second
+        if accmulateSecs < convertToSecs("01:00:00"): # 累計時數1小時以下的才去掛課
             goToCourseStr = curseTr.get_attribute("onclick")
-            courseId = re.search("\(([^)]+)\)", goToCourseStr).group(1)
-            courseList.append({"courseName": courseName, "courseId": courseId})
+            courseId = re.search("\(([^)]+)\)", goToCourseStr).group(1) # 取得括號中的courseId → ex: gotoCourse("10041")
+            needSecs = convertToSecs("01:00:00") - convertToSecs(accmulateTime) # 需多少時間(秒)
+            courseList.append({ "courseName": courseName, "courseId": courseId, "needSecs": needSecs })
 
-    print(f"All choose courses : {courseList}")
+    print("=========================================================")
+    print(f"@@@ 需要掛時間的課程 @@@ : {courseList}")
+    print("=========================================================")
 
     for idx, courseInfo in enumerate(courseList):
         print(idx, courseInfo)
-        attendToCourse(browser, courseInfo)
+        attendToCourse(browser, courseInfo, neededSecs=int(courseInfo.get("needSecs")))
         print(f"課程「{courseInfo.get('courseName')}」結束!")
 
     browser.close()
-    

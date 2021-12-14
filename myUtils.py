@@ -16,7 +16,7 @@ def gotoCourse(_browser, courseId):
     _browser.execute_script(f'document.location.href = "{"/" + courseId}"')
 
 # 上課並累計時數
-def attendToCourse(_browser, courseInfo, refreshMins=5, targetMins=60):
+def attendToCourse(_browser, courseInfo, refreshSecs=5 * 60, neededSecs=3600):
     courseId = courseInfo.get("courseId")
     gotoCourse(_browser, courseId)
 
@@ -25,21 +25,22 @@ def attendToCourse(_browser, courseInfo, refreshMins=5, targetMins=60):
         secs += 1
         print(f"{courseInfo} -- Count seconds: {secs} s")
 
-        if secs % (60 * refreshMins) == 0: # 5mis, refresh not working
+        if secs % refreshSecs == 0: # default 5mis refresh, selenium refresh not working
             gotoCourse(_browser, courseId)
 
-        if secs == 60 * targetMins: # 1hr, break
+        if secs == neededSecs: # default: 1hr, break
             break
 
         time.sleep(1)
 
-# 選取第4個li
-def gotoVideoItem(sid):
-    # switch to a specific iframe (First frame) using Id as locator
-    # iframe = browser.execute_script('return document.querySelector("#CGroup iframe")')
-    # print("iframe >>>>>>>>>>", iframe)
-    # browser.switch_to.frame(iframe)
-    # time.sleep(2)
-    # browser.execute_script(f'launchActivity(this, "S16", "null")')
-    # browser.switch_to.default_content()
-    pass
+# ref: Google: python hh mm ss to seconds
+# https://stackoverflow.com/questions/6402812/how-to-convert-an-hmmss-time-string-to-seconds-in-python
+def convertToSecs(time_str):
+    """Get Seconds from time."""
+    h, m, s = time_str.split(':')
+    return int(h) * 3600 + int(m) * 60 + int(s)
+
+if __name__ == '__main__':
+    # print(convertToSecs("00:15:01"))
+    print(convertToSecs("01:00:00") - convertToSecs("00:15:01"))
+    
