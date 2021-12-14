@@ -32,7 +32,7 @@
 ![Alt text](https://github.com/sobadrush/PeiPei-ECourse/blob/main/imgs/windows%20defender%20%E4%BE%8B%E5%A4%96%E8%A8%AD%E5%AE%9A/Image%204.png)
 
 # 關閉電腦休眠
-![Alt text](TBD)
-![Alt text](TBD)
-![Alt text](TBD)
-![Alt text](TBD)
+![Alt text](/imgs/關閉電腦休眠/關閉電腦休眠-01.png)
+![Alt text](/imgs/關閉電腦休眠/關閉電腦休眠-02.png)
+![Alt text](/imgs/關閉電腦休眠/關閉電腦休眠-03.png)
+![Alt text](/imgs/關閉電腦休眠/關閉電腦休眠-04.png)
