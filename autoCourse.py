@@ -18,9 +18,9 @@ from myUtils import *
 
 if __name__ == '__main__':
 
-    acctUsername = input("請輸登入入帳號:") or "tvbear8068"
-    acctPassword = base64.b64encode(input("請輸入登入密碼:").encode("UTF-8") ) or "SnVsbGllMjAwOTA4MjQ="
-    targetHHmmss = input("請輸入課程目標時數(格式: HH:mm:ss)，不輸入預設為 01:00:00 ") or "01:00:00"
+    acctUsername = input("請輸登入帳號：") or "tvbear8068"
+    acctPassword = base64.b64encode(input("請輸入登入密碼：").encode("UTF-8") ) or "SnVsbGllMjAwOTA4MjQ="
+    targetHHmmss = input("請輸入課程目標時數(格式: HH:mm:ss，不輸入預設為 01:00:00)：") or "01:00:00"
 
     options = Options()
     #options.add_argument("--disable-notifications")  # 取消所有的alert彈出視窗
