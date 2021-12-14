@@ -20,6 +20,7 @@ if __name__ == '__main__':
 
     acctUsername = input("請輸登入入帳號:") or "tvbear8068"
     acctPassword = base64.b64encode(input("請輸入登入密碼:").encode("UTF-8") ) or "SnVsbGllMjAwOTA4MjQ="
+    targetHHmmss = input("請輸入課程目標時數(格式: HH:mm:ss)，不輸入預設為 01:00:00 ") or "01:00:00"
 
     options = Options()
     #options.add_argument("--disable-notifications")  # 取消所有的alert彈出視窗
@@ -67,7 +68,7 @@ if __name__ == '__main__':
         if accmulateSecs < convertToSecs("01:00:00"): # 累計時數1小時以下的才去掛課
             goToCourseStr = curseTr.get_attribute("onclick")
             courseId = re.search("\(([^)]+)\)", goToCourseStr).group(1) # 取得括號中的courseId → ex: gotoCourse("10041")
-            needSecs = convertToSecs("01:00:00") - convertToSecs(accmulateTime) # 需多少時間(秒)
+            needSecs = convertToSecs(targetHHmmss) - convertToSecs(accmulateTime) # 需多少時間(秒)
             courseList.append({ "courseName": courseName, "courseId": courseId, "needSecs": needSecs })
 
     print("=========================================================")
