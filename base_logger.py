@@ -14,7 +14,7 @@ if not os.path.exists(basePath):
 myFormat = '[%(levelname)1.1s %(asctime)s %(module)s: L:%(lineno)d] %(message)s'
 myDatefmt = '%Y%m%d %H:%M:%S'
 log_filename = basePath + "/autoCourse_" + datetime.datetime.now().strftime("%Y-%m-%d.log")
-logging.basicConfig(level=_logLevel, filename=log_filename, filemode='a', # append
+logging.basicConfig(level=_logLevel, filename=log_filename, encoding='utf-8', filemode='a', # append
     format=myFormat,
     datefmt=myDatefmt,
 )
