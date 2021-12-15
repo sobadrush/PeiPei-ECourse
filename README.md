@@ -26,6 +26,7 @@
 |python3 -m PyInstaller myscript.py| 將PyInstaller當成module執行, 打包exe |https://stackoverflow.com/questions/53798660/pyinstaller-command-not-found|
 |pip freeze ./requirements.txt <br> pip install -r ./requirements.txt|Python PIP 使用 requirements.txt 管理套件相依性|https://blog.longwin.com.tw/2019/03/python-pip-requirements-txt-management-package-2019/|
 |Python Log使用|logging套件|https://shengyu7697.github.io/python-logging/|
+|不同檔案(module)中使用同一個logger|獨立建立一個base_logger.py|https://stackoverflow.com/questions/15727420/using-logging-in-multiple-modules|
 
 # 將exe加入windows defender例外
 ![Alt text](/imgs/windows%20defender%20例外設定/Image%201.png)

@@ -15,10 +15,10 @@ from selenium.webdriver.common.by import By
 # from selenium.common.exceptions import TimeoutException
 
 from myUtils import *
+from base_logger import logger
 # from myUtils import attendToCourse
 
 if __name__ == '__main__':
-    logger = initLogging(logging.DEBUG) # 初始化logging
 
     acctUsername = input("請輸入登入帳號：") or "tvbear8068"
     acctPassword = base64.b64encode(input("請輸入登入密碼：").encode("UTF-8") ) or "SnVsbGllMjAwOTA4MjQ="

@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
-import datetime
-import logging
-
-import os, os.path
+from base_logger import logger
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -27,7 +24,7 @@ def attendToCourse(_browser, courseInfo, refreshSecs=5 * 60, neededSecs=60 * 60)
     secs = 0
     while True:
         secs += 1
-        print(f"{courseInfo} -- Count seconds: {secs} s")
+        logger.info(f"{courseInfo} -- Count seconds: {secs} s")
 
         if secs % refreshSecs == 0: # default 5mis refresh, selenium refresh not working
             gotoCourse(_browser, courseId)
@@ -44,23 +41,6 @@ def convertToSecs(time_str):
     h, m, s = time_str.split(':')
     return int(h) * 3600 + int(m) * 60 + int(s)
 
-def initLogging(_logLevel=logging.DEBUG):
-    logger = logging.getLogger()
-    basePath = "D:/autoCourse_logs"
-    if not os.path.exists(basePath):
-        os.makedirs(basePath)
-    myFormat = '[%(levelname)1.1s %(asctime)s %(module)s: L:%(lineno)d] %(message)s'
-    myDatefmt = '%Y%m%d %H:%M:%S'
-    log_filename = basePath + "/autoCourse_" + datetime.datetime.now().strftime("%Y-%m-%d.log")
-    logging.basicConfig(level=_logLevel, filename=log_filename, filemode='a', # append
-        format=myFormat,
-        datefmt=myDatefmt,
-    )
-    ch = logging.StreamHandler()
-    ch.setLevel(_logLevel)
-    ch.setFormatter(logging.Formatter(myFormat, datefmt=myDatefmt))
-    logger.addHandler(ch)
-    return logger
 
 if __name__ == '__main__':
     # print(convertToSecs("00:15:01"))
