@@ -6,6 +6,7 @@
     5. 手動停止程式: CTRL + C
     6. 閱讀時數是以『分鐘』累計，不會馬上更新
     7. 注意: 記得把電腦設定成不自動休眠&關機
+    8. 若有異常請提供記錄檔給Roger，記錄檔位置→ D:/autoCourse_logs
 
 # 開發相關
     1. 建立虛擬環境: virtualenv env01
@@ -24,6 +25,7 @@
 |pyinstaller.exe -F .\autoCourse.py|打包exe(若報 [WinError 110] 系統無法開啟指定的裝置或檔案，再執行一次此指令會好!)|https://medium.com/pyladies-taiwan/python-%E5%B0%87python%E6%89%93%E5%8C%85%E6%88%90exe%E6%AA%94-32a4bacbe351|
 |python3 -m PyInstaller myscript.py| 將PyInstaller當成module執行, 打包exe |https://stackoverflow.com/questions/53798660/pyinstaller-command-not-found|
 |pip freeze ./requirements.txt <br> pip install -r ./requirements.txt|Python PIP 使用 requirements.txt 管理套件相依性|https://blog.longwin.com.tw/2019/03/python-pip-requirements-txt-management-package-2019/|
+|Python Log使用|logging套件|https://shengyu7697.github.io/python-logging/|
 
 # 將exe加入windows defender例外
 ![Alt text](/imgs/windows%20defender%20例外設定/Image%201.png)
