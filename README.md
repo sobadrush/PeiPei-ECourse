@@ -24,7 +24,7 @@
 |pip install PyInstaller|安裝PyInstaller||
 |pyinstaller.exe -F .\autoCourse.py|打包exe(若報 [WinError 110] 系統無法開啟指定的裝置或檔案，再執行一次此指令會好!)|https://medium.com/pyladies-taiwan/python-%E5%B0%87python%E6%89%93%E5%8C%85%E6%88%90exe%E6%AA%94-32a4bacbe351|
 |python3 -m PyInstaller myscript.py| 將PyInstaller當成module執行, 打包exe |https://stackoverflow.com/questions/53798660/pyinstaller-command-not-found|
-|pip freeze ./requirements.txt <br> pip install -r ./requirements.txt|Python PIP 使用 requirements.txt 管理套件相依性|https://blog.longwin.com.tw/2019/03/python-pip-requirements-txt-management-package-2019/|
+|pip freeze > ./requirements.txt <br> pip install -r ./requirements.txt|Python PIP 使用 requirements.txt 管理套件相依性|https://blog.longwin.com.tw/2019/03/python-pip-requirements-txt-management-package-2019/|
 |Python Log使用|logging套件|https://shengyu7697.github.io/python-logging/|
 |不同檔案(module)中使用同一個logger|獨立建立一個base_logger.py|https://stackoverflow.com/questions/15727420/using-logging-in-multiple-modules|
 
