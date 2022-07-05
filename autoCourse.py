@@ -32,10 +32,14 @@ if __name__ == '__main__':
     browser.maximize_window()
 
     # 若有彈出dialog → 關閉
-    # document.querySelector("#uploadHourModal button[class='close']").click()
-    closeDialogBtn = browser.find_element(By.ID, "uploadHourModal").find_element(By.CLASS_NAME, "close")
-    closeDialogBtn.click()
-
+    # 使用 xpath 查詢 id 叫 uploadHourModal 的 div 下的 class='close' 的 button ( document.querySelector("#uploadHourModal button[class='close']").click() )
+    if check_exists_by_xpath(browser, "//div[@id='uploadHourModal']/descendant::button[@class='close']"):
+        print("Dialog Button Exists, let's close it!")
+        closeDialogBtn = browser.find_element(By.ID, "uploadHourModal").find_element(By.CLASS_NAME, "close")
+        closeDialogBtn.click()
+    else:
+        print("Dialog Button Not Exists.")
+    
     loginBtn = browser.find_element_by_class_name('btLogin')
     loginBtn.click()
     time.sleep(1)

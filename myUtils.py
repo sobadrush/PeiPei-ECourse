@@ -11,6 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 
 # 跳轉到特定課程
 def gotoCourse(_browser, courseId):
@@ -41,6 +42,15 @@ def convertToSecs(time_str):
     h, m, s = time_str.split(':')
     return int(h) * 3600 + int(m) * 60 + int(s)
 
+# 根據 xpath 判斷元素是否存在
+# Xpath (XML Path Language)，是W3C定義的選擇節點的語言
+# descendant - 定位子孫節點
+def check_exists_by_xpath(browser, xpath):
+    try:
+        browser.find_element(By.XPATH, xpath)
+    except NoSuchElementException:
+        return False
+    return True
 
 if __name__ == '__main__':
     # print(convertToSecs("00:15:01"))
