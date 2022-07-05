@@ -56,8 +56,14 @@ if __name__ == '__main__':
     browser = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
     browser.get("https://ups.moe.edu.tw/mooc/index.php")
 
+    # 若有彈出dialog → 關閉
+    # document.querySelector("#uploadHourModal button[class='close']").click()
+    closeDialogBtn = browser.find_element(By.ID, "uploadHourModal").find_element(By.CLASS_NAME, "close")
+    closeDialogBtn.click()
+
     loginBtn = browser.find_element_by_class_name('btLogin')
     loginBtn.click()
+    time.sleep(1)
 
     ### 
     eduActLoginBtn = browser.execute_script('''
