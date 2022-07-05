@@ -27,6 +27,8 @@
 |pip freeze > ./requirements.txt <br> pip install -r ./requirements.txt|Python PIP 使用 requirements.txt 管理套件相依性|https://blog.longwin.com.tw/2019/03/python-pip-requirements-txt-management-package-2019/|
 |Python Log使用|logging套件|https://shengyu7697.github.io/python-logging/|
 |不同檔案(module)中使用同一個logger|獨立建立一個base_logger.py|https://stackoverflow.com/questions/15727420/using-logging-in-multiple-modules|
+|使用 xpath (XML Path Language) 找尋不限層數子孫element||https://blog.csdn.net/weixin_42159940/article/details/93035008|
+|Selenium 之find_element_by_xpath() 基礎用法||https://blog.csdn.net/qq_36652619/article/details/88424463|
 
 # 將exe加入windows defender例外
 ![Alt text](/imgs/windows%20defender%20例外設定/Image%201.png)
