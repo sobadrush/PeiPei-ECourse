@@ -22,13 +22,13 @@ if __name__ == '__main__':
 
     acctUsername = input("請輸入登入帳號：") or "tvbear8068"
     acctPassword = base64.b64encode(input("請輸入登入密碼：").encode("UTF-8") ) or "SnVsbGllMjAwOTA4MjQ="
-    targetHHmmss = input("請輸入課程目標時數(格式: HH:MM:SS，不輸入預設為 01:15:00)：") or "01:15:00"
+    # targetHHmmss = input("請輸入課程目標時數(格式: HH:MM:SS，不輸入預設為 01:15:00)：") or "01:15:00"
 
     options = Options()
     #options.add_argument("--disable-notifications")  # 取消所有的alert彈出視窗
     
     browser = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
-    browser.get("https://ups.moe.edu.tw/mooc/index.php")
+    browser.get("https://moocs.moe.edu.tw/moocs/#/home")
     browser.maximize_window()
 
     # 若有彈出dialog → 關閉
@@ -40,13 +40,14 @@ if __name__ == '__main__':
     else:
         print("Dialog Button Not Exists.")
     
-    loginBtn = browser.find_element_by_class_name('btLogin')
+    time.sleep(2)
+    loginBtn = browser.find_element(By.CLASS_NAME, 'action__button-text')
     loginBtn.click()
     time.sleep(1)
 
-    ### 
+    ### 使用教育雲端帳號或縣市帳號登入
     eduActLoginBtn = browser.execute_script('''
-        return document.querySelector("a[href*='https://oidc.tanet.edu.tw/oidc/v1/azp']");
+        return document.querySelector(".login-link__guide-title");
     ''')
     eduActLoginBtn.click()
 
@@ -56,39 +57,32 @@ if __name__ == '__main__':
     
     time.sleep(12) # 停12秒用來手動輸入圖形驗證碼
 
-    # 我的課程
-    browser.execute_script('''document.querySelector("a[href='/mooc/profile.php']").click()''')
+    # 登入
+    browser.find_element(By.ID, "id15").click()
 
-    # 選課清單
-    curseTrList = browser.execute_script('''return document.querySelectorAll(".table.subject.row")[1].tBodies[0].children''')
-    time.sleep(3)
-    logger.info(f"curseTrList = {curseTrList}")
-    logger.info(f"len(curseTrList) = {len(curseTrList)}")
+    # 跳轉到【我修的課】&& 篩選【未通過】課程
+    gotoChoosedCourseAndFilter(browser)
 
-    courseList = [] # 課程List
-    for curseTr in curseTrList:
-        tdArr = curseTr.find_elements(By.TAG_NAME, "td")
-        # logger.info(f"tdArr : {tdArr}")
-        # logger.info(f"tdArr[2] : {tdArr[2]}")
-        # logger.info(f"tdArr[5] : {tdArr[5]}")
-        courseName = tdArr[2].text
-        accmulateTime = tdArr[5].text # 已累計時間
-        logger.info(f"courseName : {courseName}")
-        logger.info(f"accmulateTime : {accmulateTime}")
-        accmulateSecs = convertToSecs(accmulateTime) # 轉換成 second
-        if accmulateSecs < convertToSecs(targetHHmmss): # 累計時數1小時以下的才去掛課
-            goToCourseStr = curseTr.get_attribute("onclick")
-            courseId = re.search("\(([^)]+)\)", goToCourseStr).group(1) # 取得括號中的courseId → ex: gotoCourse("10041")
-            needSecs = convertToSecs(targetHHmmss) - convertToSecs(accmulateTime) # 需多少時間(秒)
-            courseList.append({ "courseName": courseName, "courseId": courseId, "needSecs": needSecs })
+    # 查找出【未完成】課程名稱
+    time.sleep(1)
+    courseTrList = browser.execute_script('''
+        return document.querySelectorAll("mat-expansion-panel-header tr");
+    ''')
 
+    courseList = [
+        {
+            "courseName": tr.text.split("\n")[1], 
+            "certHours": tr.text.split("\n")[2]
+        } for tr in courseTrList] # ref. https://blog.finxter.com/python-one-line-for-loop-a-simple-tutorial/
     logger.info("=========================================================")
-    logger.info(f"@@@ 需要掛時間的課程 @@@ : {courseList}")
+    logger.info(f"@@@ 需要掛時間的課程 - 共 {len(courseList)} 堂 @@@")
+    logger.info(f"課程名稱清單(courseList) = {courseList}")
     logger.info("=========================================================")
 
     for idx, courseInfo in enumerate(courseList):
         logger.info(idx, courseInfo)
-        attendToCourse(browser, courseInfo, neededSecs=int(courseInfo.get("needSecs")))
+        attendToCourse(browser, courseInfo, neededSecs=((int(courseInfo.get("certHours"))) * 60 * 60) + (5 * 60)) # 除認證時數外，多加5分鐘
+        gotoChoosedCourseAndFilter(browser) # 跳轉到【我修的課】&& 篩選【未通過】課程
         logger.info(f"課程『{courseInfo.get('courseName')}』結束!")
 
     browser.close()
