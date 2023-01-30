@@ -30,10 +30,11 @@ def gotoChoosedCourseAndFilter(_browser):
     _browser.execute_script('''document.querySelector("mat-option[value='uncompleted']").click()''')
 
 # 上課並累計時數
-def attendToCourse(_browser, courseInfo, refreshSecs=5 * 60, neededSecs=60 * 60):
+def attendToCourse(_browser, idx, courseInfo, refreshSecs=5 * 60, neededSecs=60 * 60):
 
     time.sleep(2)
-    _browser.find_element(By.XPATH, "//td[@moocsenterevent='']").click() # click 進入課程用
+    tdArr = _browser.find_elements(By.XPATH, "//td[@moocsenterevent='']") # 可被點擊的超連結 td
+    tdArr[idx].click();
     time.sleep(2)
 
     secs = 0
@@ -89,6 +90,8 @@ def check_exists_by_xpath(browser, xpath):
     return True
 
 if __name__ == '__main__':
-    # print(convertToSecs("00:15:01"))
+    print(convertToSecs("00:15:01"))
     print(convertToSecs("01:00:00") - convertToSecs("00:15:01"))
     
+    # arr = ['111', '222', '333', '444', '555']
+    # print(arr[1:]) # 從索引 1 取到最末

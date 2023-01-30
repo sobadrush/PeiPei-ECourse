@@ -23,6 +23,7 @@ if __name__ == '__main__':
     acctUsername = input("請輸入登入帳號：") or "tvbear8068"
     acctPassword = base64.b64encode(input("請輸入登入密碼：").encode("UTF-8") ) or "SnVsbGllMjAwOTA4MjQ="
     # targetHHmmss = input("請輸入課程目標時數(格式: HH:MM:SS，不輸入預設為 01:15:00)：") or "01:15:00"
+    startCourseIndex = input("請輸入要開始掛課程的課程編號(預設為1)：") or "1"
 
     options = Options()
     #options.add_argument("--disable-notifications")  # 取消所有的alert彈出視窗
@@ -77,11 +78,18 @@ if __name__ == '__main__':
     logger.info("=========================================================")
     logger.info(f"@@@ 需要掛時間的課程 - 共 {len(courseList)} 堂 @@@")
     logger.info(f"課程名稱清單(courseList) = {courseList}")
+    logger.info(f"起始課程索引 startCourseIndex = {startCourseIndex}")
     logger.info("=========================================================")
+
+    courseList = courseList[(int(startCourseIndex)-1):] # 從 startCourseIndex 取到 last
+    logger.info(f"@@@ 從指定索引開始 - 共 {len(courseList)} 堂 @@@")
+    for item in courseList:
+        print(item, end = ',\n')
 
     for idx, courseInfo in enumerate(courseList):
         logger.info(idx, courseInfo)
-        attendToCourse(browser, courseInfo, neededSecs=((int(courseInfo.get("certHours"))) * 60 * 60) + (5 * 60)) # 除認證時數外，多加5分鐘
+        attendToCourse(browser, idx + (int(startCourseIndex)-1), courseInfo, neededSecs=((int(courseInfo.get("certHours"))) * 60 * 60) + (5 * 60)) # 除認證時數外，多加5分鐘
+        # attendToCourse(browser, idx + (int(startCourseIndex)-1), courseInfo, neededSecs=10) # for test
         gotoChoosedCourseAndFilter(browser) # 跳轉到【我修的課】&& 篩選【未通過】課程
         logger.info(f"課程『{courseInfo.get('courseName')}』結束!")
 
