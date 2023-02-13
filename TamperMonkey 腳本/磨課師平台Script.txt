@@ -1,0 +1,106 @@
+// ==UserScript==
+// @name         磨課師平臺
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  try to take over the world!
+// @author       Roger Lo
+// @match        https://moocs.moe.edu.tw/moocs/
+// @match        https://oidc.tanet.edu.tw/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=edu.tw
+// @grant        none
+
+// ==/UserScript==
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function waitForElm(selector) {
+    return new Promise(resolve => {
+        if (document.querySelector(selector)) {
+            return resolve(document.querySelector(selector));
+        }
+
+        const observer = new MutationObserver(mutations => {
+            if (document.querySelector(selector)) {
+                resolve(document.querySelector(selector));
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    });
+}
+
+var isMatchURL = (_url) => {
+   return (window.location.href).match(/^https:\/\/.+tw\/{1}/g)[0] === _url;
+}
+
+var addScript = (_jsonData) => {
+   let scriptTag = document.createElement("script")
+   for (let kk in _jsonData) {
+       scriptTag.setAttribute(kk, _jsonData[kk])
+   }
+   document.querySelector("body").append(scriptTag)
+}
+
+(async function() {
+    'use strict';
+    // Your code here...
+
+    if(isMatchURL('https://moocs.moe.edu.tw/')) {
+        // 載入 jQuery
+        addScript({ "type": "text/javascript", "src": "https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js" })
+    }
+    await sleep(3000);
+})();
+
+window.onload = async () => {
+    console.log("jQuery documentReady")
+    // document.querySelector(".action__button-text").click()
+
+    if(isMatchURL('https://moocs.moe.edu.tw/')) {
+
+        // 點擊登入(promise...then)
+        // waitForElm('.action__button-text').then((elm) => {
+        //     console.log('Element is ready');
+        //     console.log(elm.textContent);
+        //     elm.click();
+        // });
+
+        // 點擊登入(async/await)
+        await sleep(3000);
+
+        let loginBtn = await waitForElm('.action__button-text');
+
+        if (loginBtn.innerText === '登入') { // 未登入
+            loginBtn.click()
+            let loginLinkBtn = await waitForElm('.login-link__guide-title');
+            loginLinkBtn.click()
+        } else { // 已登入
+            await sleep(1000);
+            $(".mat-focus-indicator.action__button.action__button--blue.mat-button.mat-button-base").click()
+            await sleep(1000);
+            $(".menu").find("span:contains('我修的課')").click()
+            await sleep(1000);
+            $("mat-select[role='combobox']:first").click()
+            await sleep(1000);
+            $("span.mat-option-text:contains('未完成')").click()
+        }
+    }
+
+    if(isMatchURL('https://oidc.tanet.edu.tw/')) {
+        await sleep(1000);
+        document.querySelector("input[placeholder='請輸入帳號']").value = "tvbear8068"
+        document.querySelector("input[placeholder='請輸入密碼']").value = "Jullie20090824"
+        await sleep(3000);
+        let loginPicValidBtn = document.querySelector("button.btn.btn-primary.btn-block")
+        loginPicValidBtn.click()
+    }
+
+    // $("button.btn.btn-primary.btn-block:contains('登入')").click()
+    // document.querySelector("button.btn.btn-primary.btn-block").click()
+
+}
+
