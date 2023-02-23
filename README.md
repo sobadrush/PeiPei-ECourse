@@ -1,5 +1,5 @@
 # 使用方式
-    1. 至 https://ups.moe.edu.tw/mooc/index.php 進行選課
+    1. 至 https://moocs.moe.edu.tw/moocs/#/home 進行選課
     2. 執行 autoCourse.exe 並鍵入帳號密碼
     3. 輸入圖形驗證碼
     4. 程式會開啟瀏覽器並跳轉到選課畫面，將實數未滿1hr的課程掛滿1hr
