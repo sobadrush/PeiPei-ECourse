@@ -13,7 +13,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 
-# 跳轉到【我修的課】&& 篩選【未通過】課程
+
+# 跳轉到【我修的課】&& 篩選【進行中】課程
 def gotoChoosedCourseAndFilter(_browser):
     # 1. 進入[我修的課]
     # time.sleep(5)
@@ -23,14 +24,16 @@ def gotoChoosedCourseAndFilter(_browser):
     time.sleep(1)
     _browser.execute_script(f'document.location.href = "https://moocs.moe.edu.tw/moocs/#/course/my-learning"')
 
-    # 2. 篩選【未完成】課程
+    # 2. 篩選【進行中】課程
     time.sleep(2)
-    _browser.execute_script('''document.querySelector(".mat-form-field-infix").click()''')
+    _browser.execute_script('''document.querySelector(".mat-form-field-infix").click()''') # 點擊篩選下拉選單
+    
     time.sleep(1)
-    _browser.execute_script('''document.querySelector("mat-option[value='uncompleted']").click()''')
+    _browser.execute_script('''document.querySelector("mat-option[value='uncompleted']").click()''') # 點擊【進行中】
+
 
 # 上課並累計時數
-def attendToCourse(_browser, idx, courseInfo, refreshSecs=5 * 60, neededSecs=60 * 60):
+def attendToCourse(_browser, idx, courseInfo, refreshSecs=10, neededSecs=60 * 60):
 
     time.sleep(2)
     tdArr = _browser.find_elements(By.XPATH, "//td[@moocsenterevent='']") # 可被點擊的超連結 td
@@ -38,17 +41,20 @@ def attendToCourse(_browser, idx, courseInfo, refreshSecs=5 * 60, neededSecs=60 
     time.sleep(2)
 
     secs = 0
-    while True:
+    while secs < neededSecs:
         secs += 1
-        logger.info(f"{courseInfo} -- Count seconds: {secs} s")
-
-        # if secs % refreshSecs == 0: # default 5mis refresh, selenium refresh not working
-        #    gotoCourse(_browser, courseId)
-
-        if secs == neededSecs: # default: 1hr, break
-            break
-
-        time.sleep(1)
+        
+        # 每隔 refreshSecs 秒重新整理一次畫面
+        if secs % refreshSecs == 0:
+            logger.info(f"已達到 {refreshSecs} 秒，執行畫面重新整理以維持時數累計...")
+            _browser.refresh()
+            time.sleep(5)  # 等待重新整理完成
+            # 重新整理後可能需要一點時間讓畫面穩定，這裡可以根據需求調整等待時間
+        else:
+            time.sleep(1)
+            
+        if secs % 10 == 0 or secs == 1: # 每 10 秒印一次 log，避免洗版，除非是第 1 秒
+            logger.info(f"{courseInfo.get('courseName')} -- 已累計秒數: {secs} s / 目標秒數: {neededSecs} s")
 
 # # 跳轉到特定課程
 # def gotoCourse(_browser, courseId):
@@ -71,6 +77,7 @@ def attendToCourse(_browser, idx, courseInfo, refreshSecs=5 * 60, neededSecs=60 
 #             break
 
 #         time.sleep(1)
+
 
 # ref: Google: python hh mm ss to seconds
 # https://stackoverflow.com/questions/6402812/how-to-convert-an-hmmss-time-string-to-seconds-in-python

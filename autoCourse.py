@@ -7,6 +7,7 @@ import logging
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
 from selenium.webdriver.common.by import By
@@ -28,11 +29,13 @@ if __name__ == '__main__':
     options = Options()
     #options.add_argument("--disable-notifications")  # 取消所有的alert彈出視窗
     
-    browser = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
+    # Selenium 4.x 的標準寫法
+    service = Service(ChromeDriverManager().install())
+    browser = webdriver.Chrome(service=service, options=options)
     browser.get("https://moocs.moe.edu.tw/moocs/#/home")
     browser.maximize_window()
 
-    # 若有彈出dialog → 關閉
+    # 若有彈出 dialog → 關閉
     # 使用 xpath 查詢 id 叫 uploadHourModal 的 div 下的 class='close' 的 button ( document.querySelector("#uploadHourModal button[class='close']").click() )
     if check_exists_by_xpath(browser, "//div[@id='uploadHourModal']/descendant::button[@class='close']"):
         print("Dialog Button Exists, let's close it!")
@@ -47,27 +50,52 @@ if __name__ == '__main__':
     time.sleep(1)
 
     ### 使用教育雲端帳號或縣市帳號登入
-    eduActLoginBtn = browser.execute_script('''
-        return document.querySelector(".login-link__guide-title");
-    ''')
+    eduActLoginBtn = browser.find_element(By.CSS_SELECTOR, ".login-link__guide-title")
     eduActLoginBtn.click()
 
+    # 等待頁面跳轉至教育雲端登入頁
+    time.sleep(3) 
+
     ### 輸入帳密
-    browser.execute_script(f'''document.querySelector("input[placeholder='請輸入帳號']").value="{acctUsername}"''')
-    browser.execute_script(f'''document.querySelector("input[placeholder='請輸入密碼']").value="{base64.b64decode(acctPassword).decode("UTF-8")}"''')
+    # 使用 WebDriverWait 確保元素已出現
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+
+    try:
+        # 等待帳號輸入框出現
+        wait = WebDriverWait(browser, 10)
+        user_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[placeholder='請輸入帳號']")))
+        
+        # 使用 execute_script 設定值
+        browser.execute_script(f'arguments[0].value="{acctUsername}";', user_input)
+        
+        # 密碼輸入框
+        pwd_input = browser.find_element(By.CSS_SELECTOR, "input[placeholder='請輸入密碼']")
+        browser.execute_script(f'arguments[0].value="{base64.b64decode(acctPassword).decode("UTF-8")}";', pwd_input)
+    except TimeoutException:
+        logger.error("在指定時間內找不到帳號或密碼輸入框，請檢查是否已成功跳轉至登入頁面。")
+        raise
     
-    time.sleep(12) # 停12秒用來手動輸入圖形驗證碼
+    # 停最多 12 秒用來手動輸入圖形驗證碼
+    # 若提早手動點擊登入按鈕，則會因找不到按鈕而提早結束等待
+    for _ in range(12):
+        if not browser.find_elements(By.ID, "id15"):
+            break
+        time.sleep(1)
 
-    # 登入
-    browser.find_element(By.ID, "id15").click()
+    # 嘗試執行點擊（若使用者已手動點擊或按 Enter 登入，則會忽略此處的找不到元素錯誤）
+    try:
+        browser.find_element(By.ID, "id15").click()
+    except:
+        pass
 
-    # 跳轉到【我修的課】&& 篩選【未通過】課程
+    # 跳轉到【我修的課】&& 篩選【進行中】課程
     gotoChoosedCourseAndFilter(browser)
 
-    # 查找出【未完成】課程名稱
+    # 查找出【進行中】課程名稱
     time.sleep(1)
     courseTrList = browser.execute_script('''
-        return document.querySelectorAll("mat-expansion-panel-header tr");
+        return document.querySelectorAll(".table__accordion-head");
     ''')
 
     courseList = [
@@ -75,6 +103,7 @@ if __name__ == '__main__':
             "courseName": tr.text.split("\n")[1], 
             "certHours": tr.text.split("\n")[2]
         } for tr in courseTrList] # ref. https://blog.finxter.com/python-one-line-for-loop-a-simple-tutorial/
+    
     logger.info("=========================================================")
     logger.info(f"@@@ 需要掛時間的課程 - 共 {len(courseList)} 堂 @@@")
     logger.info(f"課程名稱清單(courseList) = {courseList}")
@@ -90,7 +119,7 @@ if __name__ == '__main__':
         logger.info(idx, courseInfo)
         attendToCourse(browser, idx + (int(startCourseIndex)-1), courseInfo, neededSecs=((int(courseInfo.get("certHours"))) * 60 * 60) + (5 * 60)) # 除認證時數外，多加5分鐘
         # attendToCourse(browser, idx + (int(startCourseIndex)-1), courseInfo, neededSecs=10) # for test
-        gotoChoosedCourseAndFilter(browser) # 跳轉到【我修的課】&& 篩選【未通過】課程
+        gotoChoosedCourseAndFilter(browser) # 跳轉到【我修的課】&& 篩選【進行中】課程
         logger.info(f"課程『{courseInfo.get('courseName')}』結束!")
 
     browser.close()
