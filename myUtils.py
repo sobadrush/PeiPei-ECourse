@@ -46,15 +46,44 @@ def attendToCourse(_browser, idx, courseInfo, refreshSecs=10, neededSecs=60 * 60
         
         # 每隔 refreshSecs 秒重新整理一次畫面
         if secs % refreshSecs == 0:
-            logger.info(f"已達到 {refreshSecs} 秒，執行畫面重新整理以維持時數累計...")
+            logger.info(f"已達到 {refreshSecs} 秒，執行畫面重新整理與進度檢查...")
             _browser.refresh()
             time.sleep(5)  # 等待重新整理完成
-            # 重新整理後可能需要一點時間讓畫面穩定，這裡可以根據需求調整等待時間
+            
+            try:
+                # 1. 點擊「通過標準」頁籤
+                # 這裡使用包含文字的方式定位，因為 mat-tab-label-id 可能會變動
+                criteria_tab = _browser.find_element(By.XPATH, "//div[contains(@class, 'mat-tab-label-content') and contains(text(), '通過標準')]")
+                criteria_tab.click()
+                time.sleep(2) # 等待分頁內容載入
+
+                # 2. 檢查「閱讀時數」百分比
+                # 定位策略：先找「閱讀時數」標籤，再找同層級或父層下的百分比 small 標籤
+                percent_element = _browser.find_element(By.XPATH, "//span[contains(text(), '閱讀時數')]/parent::div//div[contains(@class, 'course-status__progress-info')]/small")
+                percent_text = percent_element.text  # 格式如 "(72%)"
+                
+                # 解析數據
+                import re
+                match = re.search(r"(\d+)%", percent_text)
+                if match:
+                    progress = int(match.group(1))
+                    logger.info(f"目前的閱讀時數進度：{progress}%")
+                    
+                    if progress >= 100:
+                        logger.info("檢測到課程進度已達 100%，提前結束課程！")
+                        break
+            except Exception as e:
+                logger.warning(f"檢查進度時發生錯誤 (可能尚未載入完成): {str(e)}")
         else:
             time.sleep(1)
             
         if secs % 10 == 0 or secs == 1: # 每 10 秒印一次 log，避免洗版，除非是第 1 秒
             logger.info(f"{courseInfo.get('courseName')} -- 已累計秒數: {secs} s / 目標秒數: {neededSecs} s")
+
+    # 課程結束（達成時數或 100%），呼叫回到列表
+    logger.info(f"課程『{courseInfo.get('courseName')}』處理完成，準備回到課程列表...")
+    # 注意：autoCourse.py 也有呼叫此函數，但我們在這裡主動切換分頁
+    gotoChoosedCourseAndFilter(_browser) # 根據 user 指示在此呼叫，但 autoCourse.py 本身也有呼叫，這裡呼叫可確保狀態正確跳轉
 
 # # 跳轉到特定課程
 # def gotoCourse(_browser, courseId):
