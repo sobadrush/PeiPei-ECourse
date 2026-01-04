@@ -11,9 +11,9 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
 from selenium.webdriver.common.by import By
-# from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.support import expected_conditions as EC
-# from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 from myUtils import *
 from base_logger import logger
@@ -58,9 +58,6 @@ if __name__ == '__main__':
 
     ### 輸入帳密
     # 使用 WebDriverWait 確保元素已出現
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
-
     try:
         # 等待帳號輸入框出現
         wait = WebDriverWait(browser, 10)
