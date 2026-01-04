@@ -35,7 +35,7 @@ def gotoChoosedCourseAndFilter(_browser):
 
 
 # 上課並累計時數
-def attendToCourse(_browser, idx, courseInfo, refreshSecs=10 * 60, neededSecs=60 * 60):
+def attendToCourse(_browser, idx, courseInfo, refreshSecs=10 * 60, neededSecs=60 * 60, pause_check=None):
 
     time.sleep(2)
     tdArr = _browser.find_elements(By.XPATH, "//td[@moocsenterevent='']") # 可被點擊的超連結 td
@@ -44,6 +44,12 @@ def attendToCourse(_browser, idx, courseInfo, refreshSecs=10 * 60, neededSecs=60
 
     secs = 0
     while secs < neededSecs:
+        # 暫停檢查：若提供了 pause_check 回調且返回 True，則進入等待
+        if pause_check and pause_check():
+            while pause_check():
+                time.sleep(0.5)  # 暫停期間每 0.5 秒檢查一次
+            continue  # 恢復後繼續計時
+        
         secs += 1
         
         # 每隔 refreshSecs 秒重新整理一次畫面
