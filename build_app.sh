@@ -18,6 +18,7 @@ echo "🚀開始打包..."
 uv run pyinstaller --noconfirm --clean \
     --windowed \
     --name "PeiPei-ECourse" \
+    --icon "build_icons/Bazzi_icon.png" \
     --collect-all "selenium" \
     --collect-all "webdriver_manager" \
     guiCourse.py
