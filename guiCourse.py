@@ -34,10 +34,19 @@ class AppHandler(logging.Handler):
 class CourseAutomationUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("磨課師上課助手")
-        self.root.geometry("700x800")
+        self.root.title("磨課師自動上課助手")
+        
+        # 視窗置中
+        window_width = 1200
+        window_height = 800
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        center_x = int(screen_width/2 - window_width/2)
+        center_y = int(screen_height/2 - window_height/2)
+        
+        self.root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
         self.root.configure(bg="#1a1a2e")
-        self.root.resizable(True, True)
+        self.root.resizable(False, False)
         
         self.style = ttk.Style()
         self.style.theme_use('clam')
@@ -63,7 +72,11 @@ class CourseAutomationUI:
         self.style.map("Continue.TButton", background=[('active', '#27ae60')])
         
         self.browser = None
-        self.is_running = False
+        self.style.configure("Treeview", background="#0f3460", foreground="white", fieldbackground="#0f3460", rowheight=30, font=("Helvetica Neue", 12))
+        self.style.configure("Treeview.Heading", background="#16213e", foreground="white", font=("Helvetica Neue", 13, "bold"), relief="flat")
+        self.style.map("Treeview", background=[('selected', '#00d4ff')], foreground=[('selected', '#1a1a2e')])
+        
+        self.browser = None
         self.is_running = False
         self.is_paused = False
         self.show_password = False
@@ -78,15 +91,30 @@ class CourseAutomationUI:
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # 標題區域
-        header = ttk.Label(main_frame, text="🎓 edu 磨課師 + 自動掛機助手", style="Header.TLabel")
+        header = ttk.Label(main_frame, text="🎓 磨課師自動上課助手", style="Header.TLabel")
         header.pack(pady=(0, 5))
         
         subtitle = ttk.Label(main_frame, text="自動化課程時數累積工具", style="Sub.TLabel")
         subtitle.pack(pady=(0, 25))
 
-        # 輸入區域容器 - 使用卡片式設計
-        card_frame = tk.Frame(main_frame, bg="#16213e", highlightbackground="#0f3460", highlightthickness=2)
-        card_frame.pack(fill=tk.X, pady=10, ipadx=20, ipady=15)
+        # 內容容器 (左右分欄)
+        content_frame = tk.Frame(main_frame, bg="#1a1a2e")
+        content_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        
+        # 左側面板 (輸入 + 按鈕 + 日誌) - 固定寬度不延展
+        left_panel = tk.Frame(content_frame, bg="#1a1a2e", width=480)
+        left_panel.pack(side=tk.LEFT, fill=tk.Y, expand=False, padx=(0, 10))
+        left_panel.pack_propagate(False) # 固定大小
+        
+        # 右側面板 (課程清單) - 佔據剩餘空間
+        right_panel = tk.Frame(content_frame, bg="#1a1a2e")
+        right_panel.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(10, 0))
+
+        # --- 左側內容開始 ---
+        
+        # 輸入區域容器 - 使用卡片式設計 (移入 left_panel)
+        card_frame = tk.Frame(left_panel, bg="#16213e", highlightbackground="#0f3460", highlightthickness=2)
+        card_frame.pack(fill=tk.X, pady=0, ipadx=20, ipady=15)
         
         input_container = tk.Frame(card_frame, bg="#16213e")
         input_container.pack(fill=tk.X, padx=20, pady=10)
@@ -98,7 +126,6 @@ class CourseAutomationUI:
         self.user_entry.grid(row=0, column=1, pady=8, padx=(15, 0), sticky=tk.EW, ipady=6)
 
         # 密碼
-        # 密碼區域 (包含 Entry 和 按鈕的容器)
         tk.Label(input_container, text="登入密碼", bg="#16213e", fg="#00d4ff", font=("Helvetica Neue", 14, "bold")).grid(row=1, column=0, sticky=tk.W, pady=8)
         
         pwd_container = tk.Frame(input_container, bg="#16213e")
@@ -115,36 +142,102 @@ class CourseAutomationUI:
 
         # 課程索引
         tk.Label(input_container, text="起始課程索引", bg="#16213e", fg="#00d4ff", font=("Helvetica Neue", 14, "bold")).grid(row=2, column=0, sticky=tk.W, pady=8)
-        self.index_entry = tk.Entry(input_container, width=35, font=("Helvetica Neue", 14), bg="#0f3460", fg="white", insertbackground="white", relief="flat", highlightthickness=1, highlightbackground="#00d4ff")
+        
+        idx_container = tk.Frame(input_container, bg="#16213e")
+        idx_container.grid(row=2, column=1, pady=8, padx=(15, 0), sticky=tk.EW)
+        
+        self.index_entry = tk.Entry(idx_container, font=("Helvetica Neue", 14), bg="#0f3460", fg="white", insertbackground="white", relief="flat", highlightthickness=1, highlightbackground="#00d4ff")
         self.index_entry.insert(0, "1")
-        self.index_entry.grid(row=2, column=1, pady=8, padx=(15, 0), sticky=tk.EW, ipady=6)
+        self.index_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=6)
+        
+        tk.Button(idx_container, text="?", font=("Helvetica Neue", 11, "bold"), bg="#16213e", fg="#888888", activebackground="#16213e", activeforeground="white", relief="flat", cursor="hand2", 
+                  command=lambda: messagebox.showinfo("說明", "因課程可能有測驗還未做，為避免因測驗沒做程式流程卡住，無法執行其他課程的掛課，此參數為設定要從第幾門課開始掛", icon='info')).pack(side=tk.LEFT, padx=(5, 0))
 
         # 刷新間隔 (refreshSecs)
         tk.Label(input_container, text="刷新間隔 (分鐘)", bg="#16213e", fg="#00d4ff", font=("Helvetica Neue", 14, "bold")).grid(row=3, column=0, sticky=tk.W, pady=8)
-        self.refresh_entry = tk.Entry(input_container, width=35, font=("Helvetica Neue", 14), bg="#0f3460", fg="white", insertbackground="white", relief="flat", highlightthickness=1, highlightbackground="#00d4ff")
+        
+        refresh_container = tk.Frame(input_container, bg="#16213e")
+        refresh_container.grid(row=3, column=1, pady=8, padx=(15, 0), sticky=tk.EW)
+        
+        self.refresh_entry = tk.Entry(refresh_container, font=("Helvetica Neue", 14), bg="#0f3460", fg="white", insertbackground="white", relief="flat", highlightthickness=1, highlightbackground="#00d4ff")
         self.refresh_entry.insert(0, "10")
-        self.refresh_entry.grid(row=3, column=1, pady=8, padx=(15, 0), sticky=tk.EW, ipady=6)
+        self.refresh_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=6)
+        
+        tk.Button(refresh_container, text="?", font=("Helvetica Neue", 11, "bold"), bg="#16213e", fg="#888888", activebackground="#16213e", activeforeground="white", relief="flat", cursor="hand2",
+                  command=lambda: messagebox.showinfo("說明", "進入課程頁面後，避免「如閒置超過30分鐘，將自動導向首頁，並扣除此30分鐘學習紀錄」，程式會依據所設定的間隔在該課程頁面重整", icon='info')).pack(side=tk.LEFT, padx=(5, 0))
+
+        # 補正時間 (extra mins)
+        tk.Label(input_container, text="補正時間 (分鐘)", bg="#16213e", fg="#00d4ff", font=("Helvetica Neue", 14, "bold")).grid(row=4, column=0, sticky=tk.W, pady=8)
+        
+        extra_container = tk.Frame(input_container, bg="#16213e")
+        extra_container.grid(row=4, column=1, pady=8, padx=(15, 0), sticky=tk.EW)
+        
+        self.extra_mins_entry = tk.Entry(extra_container, font=("Helvetica Neue", 14), bg="#0f3460", fg="white", insertbackground="white", relief="flat", highlightthickness=1, highlightbackground="#00d4ff")
+        self.extra_mins_entry.insert(0, "5")
+        self.extra_mins_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=6)
+        
+        tk.Button(extra_container, text="?", font=("Helvetica Neue", 11, "bold"), bg="#16213e", fg="#888888", activebackground="#16213e", activeforeground="white", relief="flat", cursor="hand2",
+                  command=lambda: messagebox.showinfo("說明", "因操作瀏覽器畫面渲染有延遲時間及 time.sleep 累加，避免累加結果延遲，造成上課時數不足，此欄位用以補足上課時數", icon='info')).pack(side=tk.LEFT, padx=(5, 0))
 
         input_container.columnconfigure(1, weight=1)
 
         # 操作按鈕容器
-        btn_container = ttk.Frame(main_frame)
+        btn_container = ttk.Frame(left_panel)
         btn_container.pack(fill=tk.X, pady=25)
         
-        self.start_btn = ttk.Button(btn_container, text="🚀 開始自動掛機", style="Start.TButton", command=self.start_automation)
+        self.start_btn = ttk.Button(btn_container, text="🚀 開始自動上課", style="Start.TButton", command=self.start_automation)
         self.start_btn.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(0, 8), ipady=8)
         
         self.pause_btn = ttk.Button(btn_container, text="⏸ 暫停", style="Pause.TButton", command=self.toggle_pause, state='disabled')
         self.pause_btn.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(8, 0), ipady=8)
 
         # 日誌區域
-        log_label = tk.Label(main_frame, text="📋 執行日誌", bg="#1a1a2e", fg="#00d4ff", font=("Helvetica Neue", 14, "bold"))
+        log_label = tk.Label(left_panel, text="📋 執行日誌", bg="#1a1a2e", fg="#00d4ff", font=("Helvetica Neue", 14, "bold"))
         log_label.pack(anchor=tk.W, pady=(10, 5))
         
-        self.log_area = scrolledtext.ScrolledText(main_frame, height=12, font=("JetBrains Mono", 12), 
+        self.log_area = scrolledtext.ScrolledText(left_panel, height=12, font=("JetBrains Mono", 12), 
                                                    bg="#0f3460", fg="#e8e8e8", insertbackground="white",
                                                    relief="flat", state='disabled')
         self.log_area.pack(fill=tk.BOTH, expand=True, pady=5)
+        
+        # --- 右側內容開始 ---
+
+        # 課程清單視窗 (Treeview)
+        # 課程清單視窗 (Treeview)
+        # 使用 frame 來包裝標題和總選修時數
+        tree_header_frame = tk.Frame(right_panel, bg="#1a1a2e")
+        tree_header_frame.pack(fill=tk.X, pady=(0, 5))
+        
+        tk.Label(tree_header_frame, text="📚 已選課程清單", bg="#1a1a2e", fg="white", font=("Helvetica Neue", 14, "bold")).pack(side=tk.LEFT)
+        
+        self.total_hours_label = tk.Label(tree_header_frame, text="(總選修時數: 0 小時)", bg="#1a1a2e", fg="#00d4ff", font=("Helvetica Neue", 12))
+        self.total_hours_label.pack(side=tk.LEFT, padx=(10, 0))
+        
+        # Treeview 容器 (包含 Scrollbar)
+        tree_frame = tk.Frame(right_panel, bg="#1a1a2e")
+        tree_frame.pack(fill=tk.BOTH, expand=True)
+
+        columns = ("page", "idx", "name", "hours")
+        self.course_tree = ttk.Treeview(tree_frame, columns=columns, show="headings", style="Treeview")
+        
+        self.course_tree.heading("page", text="頁碼")
+        self.course_tree.column("page", width=50, minwidth=40, anchor="center")
+        
+        self.course_tree.heading("idx", text="#")
+        self.course_tree.column("idx", width=50, minwidth=40, anchor="center")
+        
+        self.course_tree.heading("name", text="課程名稱")
+        self.course_tree.column("name", width=300, minwidth=200, anchor="w", stretch=True)
+        
+        self.course_tree.heading("hours", text="時數")
+        self.course_tree.column("hours", width=80, minwidth=60, anchor="center")
+        
+        # 加上 Scrollbar
+        tree_scroll = ttk.Scrollbar(tree_frame, orient="vertical", command=self.course_tree.yview)
+        self.course_tree.configure(yscrollcommand=tree_scroll.set)
+        
+        self.course_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
     def setup_logging(self):
         # 建立一個自定義 Handler，將所有 logger 輸出轉發至 UI
@@ -154,7 +247,8 @@ class CourseAutomationUI:
             def emit(self, record):
                 try:
                     msg = self.format(record)
-                    ui_instance.log_to_ui(msg)
+                    # 直接呼叫底層 UI 更新方法，避免遞迴呼叫 logger
+                    ui_instance._append_to_ui(msg)
                 except Exception:
                     pass
         
@@ -169,15 +263,21 @@ class CourseAutomationUI:
         self.log_to_ui("系統已就緒，請點擊「開始上課」...")
     
     def log_to_ui(self, message):
-        """即時將訊息打印到 UI 日誌區域"""
+        """
+        記錄日誌並顯示於 UI。
+        此方法會透過 logger.info 記錄，進而觸發 UILogHandler 更新 UI。
+        """
+        logger.info(message)
+
+    def _append_to_ui(self, message):
+        """僅將訊息追加到 UI 元件 (由 UILogHandler 呼叫)"""
         def update():
             self.log_area.configure(state='normal')
             self.log_area.insert(tk.END, message + '\n')
             self.log_area.see(tk.END)
             self.log_area.configure(state='disabled')
-            self.log_area.update_idletasks()  # 強制立即刷新 UI
+            self.log_area.update_idletasks()
         
-        # 使用 after 確保在主線程執行
         self.root.after(0, update)
 
     def start_automation(self):
@@ -188,32 +288,36 @@ class CourseAutomationUI:
         password = self.pass_entry.get()
         start_index = self.index_entry.get()
         refresh_mins = self.refresh_entry.get()
+        extra_mins_str = self.extra_mins_entry.get()
         
         if not username or not password:
             messagebox.showwarning("警告", "請輸入帳號與密碼")
             return
         
-        # 驗證刷新間隔為數字
+        # 驗證刷新間隔與補正分鐘為數字
         try:
             refresh_secs = int(refresh_mins) * 60
+            extra_mins_val = int(extra_mins_str) if extra_mins_str else 0
         except ValueError:
-            messagebox.showwarning("警告", "刷新間隔必須為數字")
+            messagebox.showwarning("警告", "刷新間隔與補正分鐘必須為數字")
             return
 
         self.is_running = True
         self.is_paused = False
-        self.start_btn.configure(state='disabled', text="運行中...")
-        self.pause_btn.configure(state='normal')
+        self.start_btn.configure(state='disabled', text="⏳ 執行中...")
+        self.pause_btn.configure(state='normal', text="⏸ 暫停", style="Pause.TButton")
+        self.log_to_ui("系統啟動中...")
         
         # 在新執行緒中運行腳本
-        threading.Thread(target=self.run_logic, args=(username, password, start_index, refresh_secs), daemon=True).start()
+        threading.Thread(target=self.run_logic, args=(username, password, start_index, refresh_secs, extra_mins_val), daemon=True).start()
 
-    def run_logic(self, username, password, start_index, refresh_secs):
+    def run_logic(self, username, password, start_index, refresh_secs, extra_mins):
         try:
             acctUsername = username
             acctPassword = base64.b64encode(password.encode("UTF-8"))
             startCourseIndex = start_index
             self.refresh_secs = refresh_secs
+            self.extra_mins = extra_mins
 
             self.log_to_ui("正在啟動 Chrome 瀏覽器...")
             options = Options()
@@ -277,46 +381,74 @@ class CourseAutomationUI:
 
             self.log_to_ui("正在跳轉到【我修的課】...")
             gotoChoosedCourseAndFilter(self.browser)
-            time.sleep(1)
-            courseTrList = self.browser.execute_script('return document.querySelectorAll(".table__accordion-head");')
+            time.sleep(2)
+            
+            # 1. 爬取所有分頁課程
+            self.log_to_ui("正在掃描所有分頁課程...")
+            all_courses = self.collect_all_courses()
+            self.log_to_ui(f"掃描完成！共找到 {len(all_courses)} 堂課程。")
+            
+            if not all_courses:
+                 self.log_to_ui("[錯誤] 未找到任何課程，請確認是否已選課。")
+                 return
 
-            courseList = [
-                {
-                    "courseName": tr.text.split("\n")[1], 
-                    "certHours": tr.text.split("\n")[2]
-                } for tr in courseTrList]
+            # 過濾起始課程
+            start_num = int(startCourseIndex)
+            target_courses = [c for c in all_courses if c['global_idx'] >= start_num]
+            
+            self.log_to_ui(f"準備上課 - 從第 {start_num} 堂開始，共需執行 {len(target_courses)} 堂")
+            
+            # 重要：掃描結束後，瀏覽器停在最後一頁。必須重置回第一頁，因為 go_to_page 假設從第一頁開始。
+            self.log_to_ui("重置頁面狀態，在「我修的課」頁面「重新整理」後，再篩選「進行中」課程...")
+            self.browser.refresh()
+            time.sleep(2)
+            gotoChoosedCourseAndFilter(self.browser)
+            time.sleep(2)
 
-            courseList = courseList[(int(startCourseIndex)-1):]
-            self.log_to_ui(f"準備掛機 - 共 {len(courseList)} 堂課程")
-
-            for idx, courseInfo in enumerate(courseList):
+            # 2. 依序執行課程
+            for i, course in enumerate(target_courses):
                 if not self.is_running: 
                     self.log_to_ui("使用者已要求停止執行。")
                     break
                 
-                course_name = courseInfo.get('courseName')
-                self.log_to_ui(f"▶ 開始課程 [{idx+1}/{len(courseList)}]：{course_name}")
+                # 重新導航到正確頁面
+                # 因為每次 attendToCourse 結束或重新開始，頁面狀態可能重置
+                # 我們需要確保在點擊課程前，位於正確的分頁
+                if not self.go_to_page(course['page']):
+                   self.log_to_ui(f"[錯誤] 無法跳轉到第 {course['page']} 頁，跳過課程：{course['name']}")
+                   continue
                 
-                # 處理認證時數（只取出數字）
-                raw_hours = courseInfo.get("certHours", "0")
+                self.log_to_ui(f"▶ 開始課程 [{course['global_idx']}/{len(all_courses)}]：{course['name']}")
+                
+                # 計算所需秒數
+                # 計算所需秒數
+                raw_hours = course.get("hours", "0")
                 digits_only = "".join(filter(str.isdigit, str(raw_hours)))
                 cert_hours = int(digits_only) if digits_only else 0
                 
-                # 計算所需秒數
-                target_secs = (cert_hours * 60 * 60) + (5 * 60) # 多加 5 分鐘
-                self.log_to_ui(f"   認證時數：{cert_hours} 小時，目標累計：{target_secs} 秒")
+                extra_secs = self.extra_mins * 60
+                target_secs = (cert_hours * 60 * 60) + extra_secs
                 
-                attendToCourse(self.browser, idx + (int(startCourseIndex)-1), courseInfo, refreshSecs=self.refresh_secs, neededSecs=target_secs, pause_check=lambda: self.is_paused)
+                self.log_to_ui(f"   認證時數：{cert_hours} 小時，補正：{self.extra_mins} 分鐘，目標累計：{target_secs} 秒")
+                
+                # 呼叫 attendToCourse (注意：這裡傳入的是當前頁面的 row_idx)
+                attendToCourse(self.browser, course['row_idx'], {'courseName': course['name']}, 
+                               refreshSecs=self.refresh_secs, neededSecs=target_secs, 
+                               pause_check=lambda: self.is_paused)
                 
                 if not self.is_running: break
-                self.log_to_ui(f"✓ 課程『{course_name}』完成！回到課程列表...")
+                self.log_to_ui(f"✓ 課程『{course['name']}』完成！回到課程列表...")
+                
+                # 回到課程列表首頁
                 gotoChoosedCourseAndFilter(self.browser)
+                time.sleep(2)
 
-            self.log_to_ui("🎉 所有課程掛機完成！")
-            messagebox.showinfo("完成", "所有課程掛機完成！")
+            self.log_to_ui("🎉 所有課程上課完成！")
+            messagebox.showinfo("完成", "所有課程上課完成！")
 
         except Exception as e:
-            self.log_to_ui(f"[錯誤] 執行出錯: {str(e)}")
+            logger.error(f"執行出錯: {str(e)}", exc_info=True)
+            self.log_to_ui(f"[錯誤] 執行出錯，詳情請查看日誌檔案: {str(e)}")
             messagebox.showerror("錯誤", f"發生錯誤: {str(e)}")
         finally:
             self.is_running = False
@@ -339,6 +471,117 @@ class CourseAutomationUI:
             self.is_paused = True
             self.pause_btn.configure(text="▶ 繼續", style="Continue.TButton")
             self.log_to_ui("⏸ 已暫停，點擊「繼續」恢復執行...")
+
+    def collect_all_courses(self):
+        """爬取所有分頁的課程資訊"""
+        all_courses = []
+        page_num = 1
+        global_idx = 1
+        total_cert_hours = 0
+        
+        # 重置總時數顯示
+        self.total_hours_label.configure(text="(總選修時數: 0 小時)")
+        
+        while True:
+            if not self.is_running: break
+            
+            # 等待表格載入
+            time.sleep(2)
+            
+            # 抓取當前頁面課程
+            courseTrList = self.browser.execute_script('return document.querySelectorAll(".table__accordion-head");')
+            
+            if len(courseTrList) == 0:
+                break
+                
+            for row_idx, tr in enumerate(courseTrList):
+                try:
+                    text_parts = tr.text.split("\n")
+                    # 假設格式：[0]狀態, [1]名稱, [2]時數
+                    c_name = text_parts[1] if len(text_parts) > 1 else "Unknown"
+                    c_hours = text_parts[2] if len(text_parts) > 2 else "0"
+                    
+                    course_data = {
+                        'page': page_num,
+                        'row_idx': row_idx,
+                        'global_idx': global_idx,
+                        'name': c_name,
+                        'hours': c_hours
+                    }
+                    all_courses.append(course_data)
+                    
+                    # 累計時數
+                    digits_only = "".join(filter(str.isdigit, str(c_hours)))
+                    if digits_only:
+                        total_cert_hours += int(digits_only)
+                    
+                    # 更新 UI Treeview 與總時數
+                    self.course_tree.insert("", "end", values=(page_num, global_idx, c_name, c_hours))
+                    self.course_tree.yview_moveto(1) # 自動捲動到底部
+                    self.total_hours_label.configure(text=f"(總選修時數: {total_cert_hours} 小時)")
+                    
+                    global_idx += 1
+                except Exception as e:
+                    self.log_to_ui(f"[警告] 解析課程資料失敗: {str(e)}")
+
+            # 檢查下一頁
+            try:
+                # 檢查 Next 按鈕是否禁用
+                next_btn_disabled_count = self.browser.execute_script(
+                    'return document.querySelectorAll("button.mat-paginator-navigation-next[disabled]").length;')
+                
+                # 注意：MatPaginator 的 disabled 屬性有時是透過 class 'mat-button-disabled' 或屬性 'disabled'
+                # 這裡檢查 disabled 屬性
+                if next_btn_disabled_count > 0:
+                    self.log_to_ui("已到達最後一頁。")
+                    break
+                
+                # 嘗試點擊下一頁
+                next_btns = self.browser.find_elements(By.CSS_SELECTOR, "button.mat-paginator-navigation-next")
+                if next_btns:
+                    next_btn = next_btns[0]
+                    # 再次確認 class 是否包含 disabled 樣式
+                    if "mat-button-disabled" in next_btn.get_attribute("class"):
+                         self.log_to_ui("已到達最後一頁 (Disabled Class)。")
+                         break
+                         
+                    self.log_to_ui(f"前往第 {page_num + 1} 頁...")
+                    next_btn.click()
+                    page_num += 1
+                    time.sleep(1) # 等待切換
+                else:
+                    break
+            except Exception as e:
+                self.log_to_ui(f"[訊息] 無法搜尋下一頁 ({str(e)})，停止掃描。")
+                break
+                
+        return all_courses
+
+    def go_to_page(self, target_page):
+        """跳轉到指定分頁"""
+        try:
+            # 簡單實作：目前我們都在第1頁 (因為每次都回到 filters)，所以需要點擊 Next (target_page - 1) 次
+            # 改進：檢查當前頁碼比較好，但這裡先假設每次都從頭開始
+            current_page = 1
+            
+            if target_page == 1:
+                return True
+                
+            for _ in range(target_page - 1):
+                if not self.is_running: return False
+                
+                next_btns = self.browser.find_elements(By.CSS_SELECTOR, "button.mat-paginator-navigation-next")
+                if next_btns:
+                    next_btns[0].click()
+                    time.sleep(0.5)
+                else:
+                    return False
+            
+            time.sleep(1)
+            return True
+        except Exception as e:
+            self.log_to_ui(f"[錯誤] 分頁導航失敗: {str(e)}")
+            return False
 
     def toggle_password_visibility(self):
         """切換密碼顯示狀態"""
