@@ -17,6 +17,7 @@ from selenium.common.exceptions import NoSuchElementException
 # 跳轉到【我修的課】&& 篩選【進行中】課程
 def gotoChoosedCourseAndFilter(_browser):
     # 1. 進入[我修的課]
+    logger.info(">>> 呼叫 gotoChoosedCourseAndFilter(), 進入[我修的課]")
     # time.sleep(5)
     # browser.execute_script('''document.querySelector(".action__button-text").click()''')
     # time.sleep(1)
@@ -80,10 +81,8 @@ def attendToCourse(_browser, idx, courseInfo, refreshSecs=10, neededSecs=60 * 60
         if secs % 10 == 0 or secs == 1: # 每 10 秒印一次 log，避免洗版，除非是第 1 秒
             logger.info(f"{courseInfo.get('courseName')} -- 已累計秒數: {secs} s / 目標秒數: {neededSecs} s")
 
-    # 課程結束（達成時數或 100%），呼叫回到列表
-    logger.info(f"課程『{courseInfo.get('courseName')}』處理完成，準備回到課程列表...")
-    # 注意：autoCourse.py 也有呼叫此函數，但我們在這裡主動切換分頁
-    gotoChoosedCourseAndFilter(_browser) # 根據 user 指示在此呼叫，但 autoCourse.py 本身也有呼叫，這裡呼叫可確保狀態正確跳轉
+    # 課程結束（達成時數或 100%）
+    logger.info(f"課程『{courseInfo.get('courseName')}』課程結束（達成時數或 100%），準備回到課程列表...")
 
 # # 跳轉到特定課程
 # def gotoCourse(_browser, courseId):

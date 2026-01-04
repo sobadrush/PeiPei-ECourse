@@ -129,6 +129,5 @@ if __name__ == '__main__':
         attendToCourse(browser, idx + (int(startCourseIndex)-1), courseInfo, neededSecs=((int(courseInfo.get("certHours"))) * 60 * 60) + (5 * 60)) # 除認證時數外，多加5分鐘
         # attendToCourse(browser, idx + (int(startCourseIndex)-1), courseInfo, neededSecs=10) # for test
         gotoChoosedCourseAndFilter(browser) # 跳轉到【我修的課】&& 篩選【進行中】課程
-        logger.info(f"課程『{courseInfo.get('courseName')}』結束!")
 
     browser.close()
