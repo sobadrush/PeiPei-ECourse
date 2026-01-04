@@ -49,17 +49,17 @@ if __name__ == '__main__':
     loginBtn.click()
     time.sleep(1)
 
-    ### 使用教育雲端帳號或縣市帳號登入
+    ### 使用 [教育雲端帳號] 或 [縣市帳號登入]
     eduActLoginBtn = browser.find_element(By.CSS_SELECTOR, ".login-link__guide-title")
     eduActLoginBtn.click()
 
-    # 等待頁面跳轉至教育雲端登入頁
-    time.sleep(3) 
+    # 等待頁面跳轉至 [教育雲端登入頁]
+    time.sleep(2) 
 
     ### 輸入帳密
     try:
         # 等待帳號輸入框出現
-        wait = WebDriverWait(browser, 10)
+        wait = WebDriverWait(browser, 5)
         user_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[placeholder='請輸入帳號']")))
         
         # 使用 execute_script 設定值

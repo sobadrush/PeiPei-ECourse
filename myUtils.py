@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+import re
 from base_logger import logger
 
 from selenium import webdriver
@@ -34,7 +35,7 @@ def gotoChoosedCourseAndFilter(_browser):
 
 
 # 上課並累計時數
-def attendToCourse(_browser, idx, courseInfo, refreshSecs=10, neededSecs=60 * 60):
+def attendToCourse(_browser, idx, courseInfo, refreshSecs=10 * 60, neededSecs=60 * 60):
 
     time.sleep(2)
     tdArr = _browser.find_elements(By.XPATH, "//td[@moocsenterevent='']") # 可被點擊的超連結 td
@@ -64,7 +65,6 @@ def attendToCourse(_browser, idx, courseInfo, refreshSecs=10, neededSecs=60 * 60
                 percent_text = percent_element.text  # 格式如 "(72%)"
                 
                 # 解析數據
-                import re
                 match = re.search(r"(\d+)%", percent_text)
                 if match:
                     progress = int(match.group(1))
