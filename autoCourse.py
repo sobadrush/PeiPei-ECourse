@@ -57,7 +57,6 @@ if __name__ == '__main__':
     time.sleep(3) 
 
     ### 輸入帳密
-    # 使用 WebDriverWait 確保元素已出現
     try:
         # 等待帳號輸入框出現
         wait = WebDriverWait(browser, 10)
@@ -73,11 +72,24 @@ if __name__ == '__main__':
         logger.error("在指定時間內找不到帳號或密碼輸入框，請檢查是否已成功跳轉至登入頁面。")
         raise
     
-    # 停最多 12 秒用來手動輸入圖形驗證碼
+    # 停最多 20 秒用來手動輸入圖形驗證碼
     # 若提早手動點擊登入按鈕，則會因找不到按鈕而提早結束等待
-    for _ in range(12):
+    total_wait = 20
+    for i in range(total_wait, 0, -1):
         if not browser.find_elements(By.ID, "id15"):
             break
+        
+        # 在網頁按鈕上顯示倒數 (Javascript 注入)
+        try:
+            browser.execute_script(f'''
+                var btn = document.getElementById("id15");
+                if (btn) {{
+                    btn.innerText = "登入 (倒數 " + {i} + "s)";
+                    btn.style.border = "3px solid red"; // 增加紅框提醒
+                }}
+            ''')
+        except:
+            pass
         time.sleep(1)
 
     # 嘗試執行點擊（若使用者已手動點擊或按 Enter 登入，則會忽略此處的找不到元素錯誤）
