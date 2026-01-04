@@ -29,7 +29,7 @@
   - 支援「暫停/繼續」功能，隨時掌控進度。
 
 ### 📝 完善的日誌系統
-- **雙向同步記錄**：執行紀錄同時顯示於介面並寫入 `./logs/autoCourse.log` 檔案。
+- **雙向同步記錄**：執行紀錄同時顯示於介面並寫入 `./autoCourse_logs/autoCourse.log` 檔案。
 - **錯誤追蹤**：詳細記錄執行過程中的例外狀況，方便排查問題。
 
 ## 🛠️ 安裝與執行
@@ -59,6 +59,24 @@ python guiCourse.py
 uv run python guiCourse.py
 ```
 
+### 3. 打包為應用程式 (macOS)
+若您希望將程式打包為可直接執行的 `.app` 應用程式，請執行以下步驟：
+
+1. **賦予腳本執行權限**：
+   ```bash
+   chmod +x build_app.sh
+   ```
+
+2. **執行打包腳本**：
+   ```bash
+   ./build_app.sh
+   ```
+   > 此腳本會自動安裝 `pyinstaller` 並執行打包流程。
+
+3. **執行應用程式**：
+   打包完成後，應用程式位於 `dist/PeiPei-ECourse.app`。您可以直接雙擊執行，無需再透過終端機。
+   *(註：打包後的日誌檔將儲存於應用程式同層目錄下的 `autoCourse_logs/` 資料夾中)*
+
 ## 📖 使用說明
 
 1. **啟動程式**：執行後視窗將顯示於畫面中央。
@@ -79,7 +97,7 @@ uv run python guiCourse.py
 - `autoCourse.py`: 自動化邏輯核心腳本 (CLI 版本)。
 - `myUtils.py`: 共用工具函式庫 (Selenium 操作、邏輯判斷)。
 - `base_logger.py`: 日誌系統配置。
-- `logs/`: 存放執行日誌檔案。
+- `autoCourse_logs/`: 存放執行日誌檔案。
 
 ## ⚠️ 免責聲明
 本工具僅供學術研究與個人輔助使用，請勿用於任何違反平台服務條款之行為。開發者不對使用本工具造成的任何後果負責。
