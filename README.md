@@ -1,43 +1,85 @@
-# 使用方式
-    1. 至 https://moocs.moe.edu.tw/moocs/#/home 進行選課
-    2. 執行 autoCourse.exe 並鍵入帳號密碼
-    3. 輸入圖形驗證碼
-    4. 程式會開啟瀏覽器並跳轉到選課畫面，將時數未滿1hr的課程掛滿1hr
-    5. 手動停止程式: CTRL + C
-    6. 閱讀時數是以『分鐘』累計，不會馬上更新
-    7. 注意: 記得把電腦設定成不自動休眠&關機
-    8. 若有異常請提供記錄檔給Roger，記錄檔位置→ D:/autoCourse_logs
+# 磨課師自動上課助手 (MOOCs Auto Course Assistant)
 
-# 開發相關
-    1. 建立虛擬環境: virtualenv env01
-    2. 啟動虛擬環境: .\env01\Scripts\activate
-    3. 安裝所需的lib: pip install -r requirement.txt
-    4. 安裝PyInstaller: pip install PyInstaller
-    5. Build exe: pyinstaller.exe -F .\autoCourse.py
+這是一個自動化的 Python 桌面應用程式，專為「磨課師 (MOOCs)」平台設計。透過簡單的圖形介面 (GUI)，協助使用者自動登入並依序完成課程時數的掛機任務。
 
-# 坑
-    1. E-Course平台有做RWD，若 selenium 開啟的瀏覽器寬度太小 accmulateTime = tdArr[5].text 會選不到
+![GUI Screenshot](imgs/readme_used/guiCourse_01.png)
 
-# 參考資料
-|Hint|說明|參考|
-|:--:|:--:|:--:|
-|pip install PyInstaller|安裝PyInstaller||
-|pyinstaller.exe -F .\autoCourse.py|打包exe(若報 [WinError 110] 系統無法開啟指定的裝置或檔案，再執行一次此指令會好!)|https://medium.com/pyladies-taiwan/python-%E5%B0%87python%E6%89%93%E5%8C%85%E6%88%90exe%E6%AA%94-32a4bacbe351|
-|python3 -m PyInstaller myscript.py| 將PyInstaller當成module執行, 打包exe |https://stackoverflow.com/questions/53798660/pyinstaller-command-not-found|
-|pip freeze > ./requirements.txt <br> pip install -r ./requirements.txt|Python PIP 使用 requirements.txt 管理套件相依性|https://blog.longwin.com.tw/2019/03/python-pip-requirements-txt-management-package-2019/|
-|Python Log使用|logging套件|https://shengyu7697.github.io/python-logging/|
-|不同檔案(module)中使用同一個logger|獨立建立一個base_logger.py|https://stackoverflow.com/questions/15727420/using-logging-in-multiple-modules|
-|使用 xpath (XML Path Language) 找尋不限層數子孫element||https://blog.csdn.net/weixin_42159940/article/details/93035008|
-|Selenium 之find_element_by_xpath() 基礎用法||https://blog.csdn.net/qq_36652619/article/details/88424463|
+## ⭐ 主要功能
 
-# 將exe加入windows defender例外
-![Alt text](/imgs/windows%20defender%20例外設定/Image%201.png)
-![Alt text](/imgs/windows%20defender%20例外設定/Image%202.png)
-![Alt text](/imgs/windows%20defender%20例外設定/Image%203.png)
-![Alt text](/imgs/windows%20defender%20例外設定/Image%204.png)
+### 🖥️ 友善的圖形介面 (GUI)
+- **現代化深色主題**：採用舒適的深色背景設計 (`#1a1a2e`)，減少眼睛疲勞。
+- **左右分欄佈局**：
+  - **左側操作區**：設定帳號密碼、參數配置、控制按鈕與即時日誌。
+  - **右側資訊區**：自動掃描並列出所有「進行中」的課程清單，即時計算總選修時數。
+- **視窗自動置中**：啟動時自動鎖定於螢幕中央，並鎖定視窗大小 (1200x800) 以維持最佳版面。
 
-# 關閉電腦休眠
-![Alt text](/imgs/關閉電腦休眠/關閉電腦休眠-01.png)
-![Alt text](/imgs/關閉電腦休眠/關閉電腦休眠-02.png)
-![Alt text](/imgs/關閉電腦休眠/關閉電腦休眠-03.png)
-![Alt text](/imgs/關閉電腦休眠/關閉電腦休眠-04.png)
+### ⚙️ 彈性參數配置
+- **起始課程索引**：可指定從第幾堂課開始執行（方便跳過需手動測驗的課程）。
+- **刷新間隔**：設定自動重新整理頁面的時間，防止因閒置過久被登出。
+- **補正時間**：自訂額外掛機時間，以補償網路延遲或渲染時間造成的時數誤差。
+- **參數說明**：各設定欄位旁皆附有「?」說明按鈕，點擊即可查看詳細用途。
+
+### 🤖 強大的自動化核心
+- **自動登入**：支援教育雲端帳號登入流程。
+- **圖形驗證碼輔助**：在登入按鈕上顯示倒數計時，預留時間供使用者手動輸入驗證碼。
+- **多頁面掃描**：自動翻頁讀取所有課程資訊。
+- **智慧掛機**：
+  - 自動導航至課程頁面。
+  - 檢測閱讀時數百分比，若達 100% 則提早結束。
+  - 支援「暫停/繼續」功能，隨時掌控進度。
+
+### 📝 完善的日誌系統
+- **雙向同步記錄**：執行紀錄同時顯示於介面並寫入 `./logs/autoCourse.log` 檔案。
+- **錯誤追蹤**：詳細記錄執行過程中的例外狀況，方便排查問題。
+
+## 🛠️ 安裝與執行
+
+### 環境需求
+- Python 3.10+
+- Google Chrome 瀏覽器
+
+### 1. 安裝相依套件
+請確保您已安裝 Python 虛擬環境工具 (推薦使用 `uv`)。
+
+```bash
+# 使用 pip
+pip install -r requirements.txt
+
+# 或使用 uv (推薦)
+uv pip install -r requirements.txt
+```
+
+### 2. 啟動程式
+
+```bash
+# 直接執行 GUI 主程式
+python guiCourse.py
+
+# 或使用 uv
+uv run python guiCourse.py
+```
+
+## 📖 使用說明
+
+1. **啟動程式**：執行後視窗將顯示於畫面中央。
+2. **輸入資訊**：
+   - **登入帳號/密碼**：輸入您的教育雲端帳號密碼（密碼欄位支援顯示/隱藏）。
+   - **參數設定**：依需求調整「起始課程索引」、「刷新間隔」與「補正時間」。
+3. **開始掛機**：
+   - 點擊 **「🚀 開始自動上課」**。
+   - 瀏覽器將自動啟動，請在登入頁面**手動輸入圖形驗證碼**並按 Enter（或等待倒數結束自動點擊）。
+4. **執行過程**：
+   - 程式會先掃描所有課程並顯示於右側清單。
+   - 接著依序進入課程頁面掛機，直到達成目標時數。
+   - 您可以隨時點擊 **「⏸ 暫停」** 來暫時停止自動化操作。
+
+## 📂 檔案結構
+
+- `guiCourse.py`: GUI 主程式入口。
+- `autoCourse.py`: 自動化邏輯核心腳本 (CLI 版本)。
+- `myUtils.py`: 共用工具函式庫 (Selenium 操作、邏輯判斷)。
+- `base_logger.py`: 日誌系統配置。
+- `logs/`: 存放執行日誌檔案。
+
+## ⚠️ 免責聲明
+本工具僅供學術研究與個人輔助使用，請勿用於任何違反平台服務條款之行為。開發者不對使用本工具造成的任何後果負責。
