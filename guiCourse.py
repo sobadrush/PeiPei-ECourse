@@ -150,8 +150,8 @@ class CourseAutomationUI:
         self.index_entry.insert(0, "1")
         self.index_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=6)
         
-        tk.Button(idx_container, text="?", font=("Helvetica Neue", 11, "bold"), bg="#16213e", fg="#888888", activebackground="#16213e", activeforeground="white", relief="flat", cursor="hand2", 
-                  command=lambda: messagebox.showinfo("說明", "因課程可能有測驗還未做，為避免因測驗沒做程式流程卡住，無法執行其他課程的掛課，此參數為設定要從第幾門課開始掛", icon='info')).pack(side=tk.LEFT, padx=(5, 0))
+        tk.Button(idx_container, text="?", font=("Helvetica Neue", 11, "bold"), bg="#16213e", fg="#888888", activebackground="#16213e", activeforeground="white", relief="flat", cursor="hand2",
+                  command=lambda: messagebox.showinfo("說明", "因課程可能有測驗還未做，為避免因測驗沒做程式流程卡住，無法執行其他課程的掛課，此參數為設定要從第幾門課開始掛\n‼️ 對應於「已選課程清單」的 # 欄位\n‼️ 目前功能已會自動跳過100%的課程，此參數常態設1即可", icon='info')).pack(side=tk.LEFT, padx=(5, 0))
 
         # 刷新間隔 (refreshSecs)
         tk.Label(input_container, text="刷新間隔 (分鐘)", bg="#16213e", fg="#00d4ff", font=("Helvetica Neue", 14, "bold")).grid(row=3, column=0, sticky=tk.W, pady=8)
@@ -240,6 +240,12 @@ class CourseAutomationUI:
         
         self.course_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Info 按鈕 (置於右下方)
+        self.info_btn = tk.Button(right_panel, text="ℹ️", font=("Helvetica Neue", 14), bg="#1a1a2e", fg="#555555",
+                                  activebackground="#1a1a2e", activeforeground="white", relief="flat", cursor="hand2",
+                                  command=self.show_app_info)
+        self.info_btn.pack(side=tk.BOTTOM, anchor=tk.SE, pady=(5, 0))
 
     def setup_logging(self):
         # 建立一個自定義 Handler，將所有 logger 輸出轉發至 UI
@@ -420,7 +426,12 @@ class CourseAutomationUI:
                    self.log_to_ui(f"[錯誤] 無法跳轉到第 {course['page']} 頁，跳過課程：{course['name']}")
                    continue
                 
-                self.log_to_ui(f"▶ 開始課程 [{course['global_idx']}/{len(all_courses)}]：{course['name']}")
+                self.log_to_ui(f"▶ 檢查課程 [{course['global_idx']}/{len(all_courses)}]：{course['name']}")
+                
+                # 檢查進度是否已達 100%
+                if "(100%)" in str(course.get('reading_hours', '')):
+                    self.log_to_ui(f"⏭ 課程『{course['name']}』進度已達 100%，自動跳過。")
+                    continue
                 
                 # 計算所需秒數
                 # 計算所需秒數
@@ -641,6 +652,42 @@ class CourseAutomationUI:
             self.pass_entry.configure(show="")
             self.eye_btn.configure(text="🔐")
             self.show_password = True
+
+    def show_app_info(self):
+        """顯示程式資訊 (自定義彈窗以確保靠左對齊)"""
+        info_win = tk.Toplevel(self.root)
+        info_win.title("關於本程式")
+        info_win.configure(bg="#16213e")
+        info_win.resizable(False, False)
+        
+        # 設定視窗大小與置中位置
+        win_w, win_h = 320, 180
+        main_x = self.root.winfo_x()
+        main_y = self.root.winfo_y()
+        info_win.geometry(f"{win_w}x{win_h}+{main_x + 440}+{main_y + 300}")
+        
+        # 讓彈窗保持在最上層
+        info_win.transient(self.root)
+        info_win.grab_set()
+
+        content_frame = tk.Frame(info_win, bg="#16213e", padx=30, pady=25)
+        content_frame.pack(fill=tk.BOTH, expand=True)
+
+        info_text = [
+            "🧑‍💻 Author: Roger Lo",
+            "⚙️ IDE: Antigravity",
+            "🔖 version: release-20260105"
+        ]
+
+        for text in info_text:
+            lbl = tk.Label(content_frame, text=text, bg="#16213e", fg="#e8e8e8",
+                           font=("Helvetica Neue", 13), anchor="w", justify=tk.LEFT)
+            lbl.pack(fill=tk.X, pady=4)
+
+        close_btn = tk.Button(content_frame, text="確定", font=("Helvetica Neue", 11, "bold"),
+                              bg="#00d4ff", fg="#1a1a2e", activebackground="#00b8e6",
+                              relief="flat", cursor="hand2", padx=20, command=info_win.destroy)
+        close_btn.pack(pady=(15, 0))
 
 if __name__ == "__main__":
     root = tk.Tk()
