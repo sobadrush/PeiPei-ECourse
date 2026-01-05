@@ -84,6 +84,9 @@ class CourseAutomationUI:
         
         self.setup_ui()
         self.setup_logging()
+        
+        # 綁定視窗關閉事件
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def setup_ui(self):
         # 主容器
@@ -688,6 +691,24 @@ class CourseAutomationUI:
                               bg="#00d4ff", fg="#1a1a2e", activebackground="#00b8e6",
                               relief="flat", cursor="hand2", padx=20, command=info_win.destroy)
         close_btn.pack(pady=(15, 0))
+
+    def on_closing(self):
+        """處理視窗關閉事件"""
+        if self.is_running:
+            if not messagebox.askokcancel("退出", "程式正在執行中，確定要退出嗎？\n(將會自動關閉瀏覽器)"):
+                return
+            self.is_running = False  # 停止迴圈
+        
+        self.log_to_ui("正在關閉程式與釋放資源...")
+        
+        # 安全關閉瀏覽器
+        if self.browser:
+            try:
+                self.browser.quit()
+            except Exception:
+                pass
+        
+        self.root.destroy()
 
 if __name__ == "__main__":
     root = tk.Tk()
