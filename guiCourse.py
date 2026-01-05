@@ -203,7 +203,6 @@ class CourseAutomationUI:
         # --- 右側內容開始 ---
 
         # 課程清單視窗 (Treeview)
-        # 課程清單視窗 (Treeview)
         # 使用 frame 來包裝標題和總選修時數
         tree_header_frame = tk.Frame(right_panel, bg="#1a1a2e")
         tree_header_frame.pack(fill=tk.X, pady=(0, 5))
@@ -217,7 +216,7 @@ class CourseAutomationUI:
         tree_frame = tk.Frame(right_panel, bg="#1a1a2e")
         tree_frame.pack(fill=tk.BOTH, expand=True)
 
-        columns = ("page", "idx", "name", "hours")
+        columns = ("page", "idx", "name", "hours", "reading_hours")
         self.course_tree = ttk.Treeview(tree_frame, columns=columns, show="headings", style="Treeview")
         
         self.course_tree.heading("page", text="頁碼")
@@ -229,8 +228,11 @@ class CourseAutomationUI:
         self.course_tree.heading("name", text="課程名稱")
         self.course_tree.column("name", width=300, minwidth=200, anchor="w", stretch=True)
         
-        self.course_tree.heading("hours", text="時數")
+        self.course_tree.heading("hours", text="認證時數")
         self.course_tree.column("hours", width=80, minwidth=60, anchor="center")
+
+        self.course_tree.heading("reading_hours", text="閱讀時數")
+        self.course_tree.column("reading_hours", width=120, minwidth=100, anchor="center")
         
         # 加上 Scrollbar
         tree_scroll = ttk.Scrollbar(tree_frame, orient="vertical", command=self.course_tree.yview)
@@ -321,8 +323,8 @@ class CourseAutomationUI:
 
             self.log_to_ui("正在啟動 Chrome 瀏覽器...")
             options = Options()
-            service = Service(ChromeDriverManager().install())
-            self.browser = webdriver.Chrome(service=service, options=options)
+            # 移除 Service(ChromeDriverManager().install())，讓 Selenium 4.x 內建的 Selenium Manager 自動處理
+            self.browser = webdriver.Chrome(options=options)
             self.browser.get("https://moocs.moe.edu.tw/moocs/#/home")
             self.browser.maximize_window()
             self.log_to_ui("瀏覽器已啟動，正在開啟磨課師首頁...")
@@ -488,35 +490,81 @@ class CourseAutomationUI:
             # 等待表格載入
             time.sleep(2)
             
-            # 抓取當前頁面課程
-            courseTrList = self.browser.execute_script('return document.querySelectorAll(".table__accordion-head");')
+            # 抓取當前頁面課程資訊
+            script = """
+            var results = [];
+            var heads = document.querySelectorAll(".table__accordion-head");
+            heads.forEach(head => {
+                var name = "";
+                var hours = "0 小時";
+                var readingTime = "---";
+                
+                // 課程名稱
+                var nameEl = head.querySelector(".table__course-name");
+                if (nameEl) name = nameEl.innerText.trim();
+                
+                // 認證時數 (通常在第 3 個 td)
+                var tds = head.querySelectorAll("td");
+                if (tds.length >= 3) {
+                    hours = tds[2].innerText.trim();
+                }
+
+                // 閱讀時數 (在下方的 accordion container 中)
+                var container = head.nextElementSibling;
+                if (container && container.classList.contains("table__accordion-container")) {
+                    var labels = container.querySelectorAll(".course-status__progress-label");
+                    for (var i = 0; i < labels.length; i++) {
+                        if (labels[i].innerText.includes("閱讀時數")) {
+                            var parent = labels[i].closest(".course-status__progress");
+                            if (parent) {
+                                var info = parent.querySelector(".course-status__progress-info");
+                                if (info) {
+                                    // 抓取分鐘數及百分比，例如: "85 分鐘(100%)"
+                                    var span = info.querySelector("span");
+                                    var small = info.querySelector("small");
+                                    if (span) {
+                                        readingTime = span.innerText.trim();
+                                        if (small) readingTime += small.innerText.trim();
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                results.push({name: name, hours: hours, readingTime: readingTime});
+            });
+            return results;
+            """
             
-            if len(courseTrList) == 0:
+            page_data = self.browser.execute_script(script)
+            
+            if not page_data:
                 break
                 
-            for row_idx, tr in enumerate(courseTrList):
+            for row_idx, item in enumerate(page_data):
                 try:
-                    text_parts = tr.text.split("\n")
-                    # 假設格式：[0]狀態, [1]名稱, [2]時數
-                    c_name = text_parts[1] if len(text_parts) > 1 else "Unknown"
-                    c_hours = text_parts[2] if len(text_parts) > 2 else "0"
+                    c_name = item['name']
+                    c_hours = item['hours']
+                    c_reading = item['readingTime']
                     
                     course_data = {
                         'page': page_num,
                         'row_idx': row_idx,
                         'global_idx': global_idx,
                         'name': c_name,
-                        'hours': c_hours
+                        'hours': c_hours,
+                        'reading_hours': c_reading
                     }
                     all_courses.append(course_data)
                     
-                    # 累計時數
+                    # 累計認證時數
                     digits_only = "".join(filter(str.isdigit, str(c_hours)))
                     if digits_only:
                         total_cert_hours += int(digits_only)
                     
                     # 更新 UI Treeview 與總時數
-                    self.course_tree.insert("", "end", values=(page_num, global_idx, c_name, c_hours))
+                    self.course_tree.insert("", "end", values=(page_num, global_idx, c_name, c_hours, c_reading))
                     self.course_tree.yview_moveto(1) # 自動捲動到底部
                     self.total_hours_label.configure(text=f"(總選修時數: {total_cert_hours} 小時)")
                     
