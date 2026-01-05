@@ -428,6 +428,9 @@ class CourseAutomationUI:
                 if not self.go_to_page(course['page']):
                    self.log_to_ui(f"[錯誤] 無法跳轉到第 {course['page']} 頁，跳過課程：{course['name']}")
                    continue
+
+                # 在執行任何動作前，先更新 UI 和課程資訊
+                self.update_current_page_info(course['page'], all_courses)
                 
                 self.log_to_ui(f"▶ 檢查課程 [{course['global_idx']}/{len(all_courses)}]：{course['name']}")
                 
@@ -505,51 +508,7 @@ class CourseAutomationUI:
             time.sleep(2)
             
             # 抓取當前頁面課程資訊
-            script = """
-            var results = [];
-            var heads = document.querySelectorAll(".table__accordion-head");
-            heads.forEach(head => {
-                var name = "";
-                var hours = "0 小時";
-                var readingTime = "---";
-                
-                // 課程名稱
-                var nameEl = head.querySelector(".table__course-name");
-                if (nameEl) name = nameEl.innerText.trim();
-                
-                // 認證時數 (通常在第 3 個 td)
-                var tds = head.querySelectorAll("td");
-                if (tds.length >= 3) {
-                    hours = tds[2].innerText.trim();
-                }
-
-                // 閱讀時數 (在下方的 accordion container 中)
-                var container = head.nextElementSibling;
-                if (container && container.classList.contains("table__accordion-container")) {
-                    var labels = container.querySelectorAll(".course-status__progress-label");
-                    for (var i = 0; i < labels.length; i++) {
-                        if (labels[i].innerText.includes("閱讀時數")) {
-                            var parent = labels[i].closest(".course-status__progress");
-                            if (parent) {
-                                var info = parent.querySelector(".course-status__progress-info");
-                                if (info) {
-                                    // 抓取分鐘數及百分比，例如: "85 分鐘(100%)"
-                                    var span = info.querySelector("span");
-                                    var small = info.querySelector("small");
-                                    if (span) {
-                                        readingTime = span.innerText.trim();
-                                        if (small) readingTime += small.innerText.trim();
-                                    }
-                                }
-                            }
-                            break;
-                        }
-                    }
-                }
-                results.push({name: name, hours: hours, readingTime: readingTime});
-            });
-            return results;
-            """
+            script = self._get_scraping_script()
             
             page_data = self.browser.execute_script(script)
             
@@ -562,13 +521,18 @@ class CourseAutomationUI:
                     c_hours = item['hours']
                     c_reading = item['readingTime']
                     
+                    # 更新 UI Treeview
+                    iid = self.course_tree.insert("", "end", values=(page_num, global_idx, c_name, c_hours, c_reading))
+                    self.course_tree.yview_moveto(1) # 自動捲動到底部
+
                     course_data = {
                         'page': page_num,
                         'row_idx': row_idx,
                         'global_idx': global_idx,
                         'name': c_name,
                         'hours': c_hours,
-                        'reading_hours': c_reading
+                        'reading_hours': c_reading,
+                        'iid': iid
                     }
                     all_courses.append(course_data)
                     
@@ -576,10 +540,7 @@ class CourseAutomationUI:
                     digits_only = "".join(filter(str.isdigit, str(c_hours)))
                     if digits_only:
                         total_cert_hours += int(digits_only)
-                    
-                    # 更新 UI Treeview 與總時數
-                    self.course_tree.insert("", "end", values=(page_num, global_idx, c_name, c_hours, c_reading))
-                    self.course_tree.yview_moveto(1) # 自動捲動到底部
+
                     self.total_hours_label.configure(text=f"(總選修時數: {total_cert_hours} 小時)")
                     
                     global_idx += 1
@@ -644,6 +605,93 @@ class CourseAutomationUI:
         except Exception as e:
             self.log_to_ui(f"[錯誤] 分頁導航失敗: {str(e)}")
             return False
+
+    def _get_scraping_script(self):
+        """回傳抓取課程資訊的 JS 腳本 (共用)"""
+        return """
+            var results = [];
+            var heads = document.querySelectorAll(".table__accordion-head");
+            heads.forEach(head => {
+                var name = "";
+                var hours = "0 小時";
+                var readingTime = "---";
+                
+                // 課程名稱
+                var nameEl = head.querySelector(".table__course-name");
+                if (nameEl) name = nameEl.innerText.trim();
+                
+                // 認證時數 (通常在第 3 個 td)
+                var tds = head.querySelectorAll("td");
+                if (tds.length >= 3) {
+                    hours = tds[2].innerText.trim();
+                }
+
+                // 閱讀時數 (在下方的 accordion container 中)
+                var container = head.nextElementSibling;
+                if (container && container.classList.contains("table__accordion-container")) {
+                    var labels = container.querySelectorAll(".course-status__progress-label");
+                    for (var i = 0; i < labels.length; i++) {
+                        if (labels[i].innerText.includes("閱讀時數")) {
+                            var parent = labels[i].closest(".course-status__progress");
+                            if (parent) {
+                                var info = parent.querySelector(".course-status__progress-info");
+                                if (info) {
+                                    // 抓取分鐘數及百分比，例如: "85 分鐘(100%)"
+                                    var span = info.querySelector("span");
+                                    var small = info.querySelector("small");
+                                    if (span) {
+                                        readingTime = span.innerText.trim();
+                                        if (small) readingTime += small.innerText.trim();
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                results.push({name: name, hours: hours, readingTime: readingTime});
+            });
+            return results;
+        """
+
+    def update_current_page_info(self, page_num, all_courses):
+        """重新掃描當前頁面的課程資訊並更新 UI"""
+        try:
+            self.log_to_ui(f"正在同步第 {page_num} 頁的最新數據...")
+            time.sleep(1) # 稍作等待確保渲染
+            
+            script = self._get_scraping_script()
+            page_data = self.browser.execute_script(script)
+            
+            if not page_data:
+                return
+
+            # 找出屬於這一頁的課程物件 (Pointer)
+            page_courses = [c for c in all_courses if c['page'] == page_num]
+            
+            for i, item in enumerate(page_data):
+                if i < len(page_courses):
+                    course = page_courses[i]
+                    
+                    # 更新數據
+                    new_reading = item['readingTime']
+                    new_hours = item['hours']
+                    
+                    course['reading_hours'] = new_reading
+                    course['hours'] = new_hours
+                    
+                    # 更新 UI
+                    if 'iid' in course:
+                        self.course_tree.item(course['iid'], values=(
+                            course['page'], 
+                            course['global_idx'], 
+                            course['name'], 
+                            new_hours, 
+                            new_reading
+                        ))
+                    
+        except Exception as e:
+            self.log_to_ui(f"[警告] 更新頁面資訊失敗: {str(e)}")
 
     def toggle_password_visibility(self):
         """切換密碼顯示狀態"""
