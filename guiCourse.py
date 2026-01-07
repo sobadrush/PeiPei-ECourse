@@ -7,6 +7,7 @@ import base64
 import time
 import logging
 import queue
+import platform
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -36,9 +37,31 @@ class CourseAutomationUI:
         self.root = root
         self.root.title("磨課師自動上課助手")
         
+        # 處理高解析度螢幕 (DPI Scaling) - 特別針對 Mac Retina 與 Windows High DPI
+        try:
+            # 取得系統 DPI 並計算縮放比例
+            # 點 (point) 在 Mac 標準為 72 DPI, Windows 為 96 DPI
+            dpi = self.root.winfo_fpixels('1i')
+            if dpi > 0:
+                # 根據 DPI 自動設定縮放係數
+                # 對於 Mac Retina, dpi 通常為 144 (2x) 或更高
+                self.scaling_factor = dpi / 72.0
+                self.root.tk.call('tk', 'scaling', self.scaling_factor)
+            else:
+                self.scaling_factor = 1.0
+        except Exception as e:
+            print(f"DPI Scaling adjustment failed: {e}")
+            self.scaling_factor = 1.0
+
         # 視窗置中
         window_width = 1200
         window_height = 800
+        # 根據縮放比例微調視窗大小 (Mac 下通常不用大幅增加像素值，因為 geometry 單位是 points)
+        # 但如果是 Windows，由於基準是 96 DPI (1.33)，需要適度換算
+        if platform.system() != 'Darwin' and self.scaling_factor > 1.33:
+            window_width = int(window_width * (self.scaling_factor / 1.33))
+            window_height = int(window_height * (self.scaling_factor / 1.33))
+
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
         center_x = int(screen_width/2 - window_width/2)
@@ -46,7 +69,7 @@ class CourseAutomationUI:
         
         self.root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
         self.root.configure(bg="#1a1a2e")
-        self.root.resizable(False, False)
+        self.root.resizable(True, True) # 允許調整大小，避免在某些解析度下顯示不完全
         
         self.style = ttk.Style()
         self.style.theme_use('clam')
@@ -105,7 +128,11 @@ class CourseAutomationUI:
         content_frame.pack(fill=tk.BOTH, expand=True, pady=10)
         
         # 左側面板 (輸入 + 按鈕 + 日誌) - 固定寬度不延展
-        left_panel = tk.Frame(content_frame, bg="#1a1a2e", width=480)
+        # 根據縮放比例調整左側面板寬度 (Mac 基準為 1.0, Windows 基準為 1.33)
+        base_scaling = 1.0 if platform.system() == 'Darwin' else 1.33
+        adjusted_left_width = int(480 * (self.scaling_factor / base_scaling))
+        
+        left_panel = tk.Frame(content_frame, bg="#1a1a2e", width=adjusted_left_width)
         left_panel.pack(side=tk.LEFT, fill=tk.Y, expand=False, padx=(0, 10))
         left_panel.pack_propagate(False) # 固定大小
         
